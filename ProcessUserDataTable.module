@@ -10,7 +10,7 @@
  * @author frameless Media & ChatGPT o4-mini-high
  * @link   https://frameless.at
  * @license GNU/GPL v2
- * @version 2.3.0
+ * @version 2.3.1
  */
 
 class ProcessUserDataTable extends Process implements Module, ConfigurableModule {
@@ -23,7 +23,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	public static function getModuleInfo(): array {
 		return [
 			'title' => 'User Data Table',
-			'version' => '2.3.0',
+			'version' => '2.3.1',
 			'summary' => 'Displays a configurable table of user fields in the admin interface.',
 			'author' => 'frameless Media',
 			'icon' => 'users',
@@ -325,6 +325,8 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	
 		return !empty($output) ? implode($sep, $output) : '';
 	}
+
+	
 	/**
 	 * Render a primitive field (string, number, Page, PageArray) from the user object.
 	 *
@@ -336,46 +338,108 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	 * @param array $params Rendering parameters, including:
 	 *   - resolve_page: Subfield to extract from Page/PageArray (optional)
 	 *   - edit_link: Link to user edit page (optional)
-	 *   - separator: Separator between multiple values (default: \", \")
+	 *   - separator: Separator between multiple values (default: ", ")
 	 *   - tooltip_field / tooltip_prefix / tooltip_format: Tooltip configuration (optional)
 	 * @return string The rendered output for the field
 	 */
-	protected function renderPrimitiveField(Page $user, string $fieldName, array $params): string {
-	
-		$editLink = !empty($params['edit_link']);
-		$sep = $params['separator'] ?? ', ';
-		$resolvePage = $params['resolve_page'] ?? '';
-	
-		$value = $user->get($fieldName);
-	
-		if ($value instanceof PageArray) {
-			$items = [];
-			foreach ($value as $page) {
-				$text = $resolvePage ? $page->get($resolvePage) : $page->title;
-				$text = $this->sanitizer->entities((string) $text);
-				$items[] = $text;
-			}
-			$output = implode($sep, $items);
-		} elseif ($value instanceof Page) {
-			$output = $resolvePage ? $value->get($resolvePage) : $value->title;
-			$output = $this->sanitizer->entities((string) $output);
-		} else {
-			$output = is_array($value) ? implode($sep, $value) : (string)$value;
-		}
-	
-		$tooltip = $this->renderTooltipValue(
-			$user->get($params['tooltip_field'] ?? null),
-			$params
-		);
-	
-		if ($editLink) {
-			return "<a href='{$user->editUrl}'{$tooltip}>{$output}</a>";
-		}
-		if ($tooltip) {
-			return "<span{$tooltip}>{$output}</span>";
-		}
-		return $output;
-	}
+	 
+	 /*	protected function renderPrimitiveField(Page $user, string $fieldName, array $params): string {
+	 
+		 $editLink = !empty($params['edit_link']);
+		 $sep = $params['separator'] ?? ', ';
+		 $resolvePage = $params['resolve_page'] ?? '';
+	 
+		 $value = $user->get($fieldName);
+	 
+		 if ($value instanceof PageArray) {
+			 $items = [];
+			 foreach ($value as $page) {
+				 $text = $resolvePage ? $page->get($resolvePage) : $page->title;
+				 $text = $this->sanitizer->entities((string) $text);
+				 $items[] = $text;
+			 }
+			 $output = implode($sep, $items);
+		 } elseif ($value instanceof Page) {
+			 $output = $resolvePage ? $value->get($resolvePage) : $value->title;
+			 $output = $this->sanitizer->entities((string) $output);
+		 } else {
+			 $output = is_array($value) ? implode($sep, $value) : (string)$value;
+		 }
+	 
+		 $tooltip = $this->renderTooltipValue(
+			 $user->get($params['tooltip_field'] ?? null),
+			 $params
+		 );
+	 
+		 if ($editLink) {
+			 return "<a href='{$user->editUrl}'{$tooltip}>{$output}</a>";
+		 }
+		 if ($tooltip) {
+			 return "<span{$tooltip}>{$output}</span>";
+		 }
+		 return $output;
+	 } */
+
+protected function renderPrimitiveField(Page $user, string $fieldName, array $params): string {
+	 
+		 $editLink = !empty($params['edit_link']);
+		 $sep = $params['separator'] ?? ', ';
+		 $resolvePage = $params['resolve_page'] ?? '';
+	 
+		 // Get the field value
+		 $value = $user->get($fieldName);
+	 
+		 // Get the field object to check its type
+		 $field = wire('fields')->get($fieldName);
+	 
+		 // Handle FieldtypeCheckbox and FieldtypeToggle
+		 if ($field->type instanceof FieldtypeCheckbox || $field->type instanceof FieldtypeToggle) {
+			 // Check for the `format_raw` configuration
+			 $formatRaw = $params['format_raw'] ?? null;
+	 
+			 if ($formatRaw) {
+				 // Parse the format_raw string (e.g., "no|yes")
+				 $options = explode('|', $formatRaw);
+				 $output = $value == "1" ? ($options[1] ?? 'Yes') : ($options[0] ?? 'No');
+			 } else {
+				 // Default labels if no format_raw is specified
+				 $output = $value == "1"
+					 ? "<span class='uk-label uk-label-success'>Enabled</span>"
+					 : "<span class='uk-label uk-label-danger'>Disabled</span>";
+			 }
+		 } elseif ($value instanceof PageArray) {
+			 // Handle PageArray fields
+			 $items = [];
+			 foreach ($value as $page) {
+				 $text = $resolvePage ? $page->get($resolvePage) : $page->title;
+				 $text = $this->sanitizer->entities((string) $text);
+				 $items[] = $text;
+			 }
+			 $output = implode($sep, $items);
+		 } elseif ($value instanceof Page) {
+			 // Handle Page fields
+			 $output = $resolvePage ? $value->get($resolvePage) : $value->title;
+			 $output = $this->sanitizer->entities((string) $output);
+		 } else {
+			 // Handle other primitive fields
+			 $output = is_array($value) ? implode($sep, $value) : (string) $value;
+		 }
+	 
+		 // Render tooltip if configured
+		 $tooltip = $this->renderTooltipValue(
+			 $user->get($params['tooltip_field'] ?? null),
+			 $params
+		 );
+	 
+		 // Render output with optional edit link or tooltip
+		 if ($editLink) {
+			 return "<a href='{$user->editUrl}'{$tooltip}>{$output}</a>";
+		 }
+		 if ($tooltip) {
+			 return "<span{$tooltip}>{$output}</span>";
+		 }
+		 return $output;
+	 }
 	
 	/**
 	 * Render a virtual field based on a selector expression.
@@ -671,7 +735,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	 
 		 return $out;
 	 }
-	 	
+		 
 	/**
 	 * Parse configuration parameters from a multiline text string.
 	 *
@@ -713,172 +777,179 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 		return $validCount > 0 ? $params : [];
 	}
 	
-	/**
-	 * Get the module configuration inputfields.
-	 *
-	 * This method generates a set of input fields to configure the module.
-	 * It includes user field selection, extra fields, sorting, pagination, and role filters.
-	 *
-	 * @param array $data The configuration data array.
-	 * @return InputfieldWrapper The input field wrapper containing all configuration fields.
-	 */
-	public static function getModuleConfigInputfields(array $data) {
+public static function getModuleConfigInputfields(array $data): InputfieldWrapper {
 		$inputfields = new InputfieldWrapper();
 	
-		// 1) Selection of real user fields
-		$userTemplate = wire('templates')->get('user');
-		$fieldOptions = [];
-		foreach ($userTemplate->fields as $field) {
-			$fieldOptions[$field->name] = $field->label;
+		// Define a schema for the configuration fields
+		$configFields = [
+			'user_fields_select' => [
+				'type'        => 'InputfieldAsmSelect',
+				'label'       => 'Fields from the User Template',
+				'description' => 'Select fields from the User template to be displayed in the table.',
+				'options'     => self::getUserTemplateFields(),
+				'value'       => $data['user_fields_select'] ?? [],
+				'columnWidth' => 50,
+			],
+			'extra_fields' => [
+				'type'        => 'InputfieldText',
+				'label'       => 'Additional (virtual) field names',
+				'description' => 'Comma-separated, e.g., virtual__sum, virtual__avgScore.',
+				'value'       => $data['extra_fields'] ?? '',
+				'columnWidth' => 50,
+			],
+			'user_roles' => [
+				'type'        => 'InputfieldAsmSelect',
+				'label'       => 'Show only users with the following roles',
+				'description' => 'If no role is selected, all users will be displayed.',
+				'options'     => self::getAvailableRoles(),
+				'value'       => $data['user_roles'] ?? [],
+				'columnWidth' => 50,
+			],
+			'roles_mode' => [
+				'type'        => 'InputfieldRadios',
+				'label'       => 'Role condition',
+				'description' => 'At least one (OR) or all exactly (AND)',
+				'options'     => ['or' => 'At least one (OR)', 'and' => 'All exactly (AND)'],
+				'value'       => $data['roles_mode'] ?? 'or',
+				'columnWidth' => 50,
+			],
+			'sort_field' => [
+				'type'        => 'InputfieldText',
+				'label'       => 'Default sorting field',
+				'description' => 'e.g., "email" or "virtual__sum".',
+				'value'       => $data['sort_field'] ?? '',
+				'columnWidth' => 34,
+			],
+			'sort_dir' => [
+				'type'        => 'InputfieldSelect',
+				'label'       => 'Sorting direction',
+				'description' => '"Ascending": A->Z, or 1->100.',
+				'options'     => ['asc' => 'Ascending', 'desc' => 'Descending'],
+				'value'       => $data['sort_dir'] ?? 'asc',
+				'columnWidth' => 33,
+			],
+			'entries_per_page' => [
+				'type'        => 'InputfieldInteger',
+				'label'       => 'Entries per page',
+				'description' => 'Default: 25',
+				'value'       => $data['entries_per_page'] ?? 25,
+				'columnWidth' => 33,
+			],
+		];
+	
+		// Generate input fields dynamically based on the schema
+		foreach ($configFields as $name => $fieldConfig) {
+			$field = wire('modules')->get($fieldConfig['type']);
+			$field->name = $name;
+			$field->label = $fieldConfig['label'];
+			$field->description = $fieldConfig['description'];
+			$field->value = $fieldConfig['value'];
+			if (isset($fieldConfig['options'])) {
+				$field->addOptions($fieldConfig['options']);
+			}
+			if (isset($fieldConfig['columnWidth'])) {
+				$field->columnWidth = $fieldConfig['columnWidth'];
+			}
+			$inputfields->add($field);
 		}
-		$asm = wire('modules')->get('InputfieldAsmSelect');
-		$asm->name        = 'user_fields_select';
-		$asm->label       = 'Fields from the User Template';
-		$asm->addOptions($fieldOptions);
-		$asm->value       = $data['user_fields_select'] ?? [];
-		$asm->description = 'Select fields from the User template to be displayed in the table.';
-		$asm->columnWidth = '50';
-		$inputfields->add($asm);
 	
-		// 2) Additional (virtual) fields
-		$extra = wire('modules')->get('InputfieldText');
-		$extra->name        = 'extra_fields';
-		$extra->label       = 'Additional (virtual) field names';
-		$extra->description = 'Comma-separated, e.g., virtual__sum, virtual__avgScore';
-		$extra->value       = $data['extra_fields'] ?? '';
-		$extra->columnWidth = '50';
-		$inputfields->add($extra);
-	
-		// 3) Combined list in hidden field
+		// Generate hidden field for combined list of user/extra fields
 		$allFields = array_merge(
 			$data['user_fields_select'] ?? [],
 			array_map('trim', explode(',', $data['extra_fields'] ?? ''))
 		);
-		$hidden = wire('modules')->get('InputfieldHidden');
-		$hidden->name  = 'user_fields';
-		$hidden->value = json_encode($allFields);
-		$inputfields->add($hidden);
+		$hiddenField = wire('modules')->get('InputfieldHidden');
+		$hiddenField->name = 'user_fields';
+		$hiddenField->value = json_encode($allFields);
+		$inputfields->add($hiddenField);
 	
-		// 4) Role filter
-		$roleOptions = [];
-		foreach (wire('roles') as $role) {
-			$roleOptions[$role->name] = $role->name;
-		}
-		$roleSelect = wire('modules')->get('InputfieldAsmSelect');
-		$roleSelect->name        = 'user_roles';
-		$roleSelect->label       = 'Show only users with the following roles';
-		$roleSelect->addOptions($roleOptions);
-		$roleSelect->value       = $data['user_roles'] ?? [];
-		$roleSelect->description = 'If no role is selected, all users will be displayed.';
-		$roleSelect->columnWidth = '50';
-		$inputfields->add($roleSelect);
-	
-		$modeSelect = wire('modules')->get('InputfieldRadios');
-		$modeSelect->name        = 'roles_mode';
-		$modeSelect->label       = 'Role condition';
-		$modeSelect->description = 'At least one (OR) or all exactly (AND)';
-		$modeSelect->addOptions([
-			'or'  => 'At least one (OR)',
-			'and' => 'All exactly (AND)',
-		]);
-		$modeSelect->value = $data['roles_mode'] ?? 'or';
-		$modeSelect->columnWidth = '50';
-		$inputfields->add($modeSelect);
-	
-		// 5) Sorting & Pagination
-		$inputfields->add(wire('modules')->get('InputfieldText')->setArray([
-			'name'        => 'sort_field',
-			'label'       => 'Default sorting field',
-			'columnWidth' => '34',
-			'description' => 'e.g., "email" or "virtual__sum"',
-			'value'       => $data['sort_field'] ?? ''
-		]));
-		$inputfields->add(wire('modules')->get('InputfieldSelect')->setArray([
-			'name'    => 'sort_dir',
-			'label'   => 'Sorting direction',
-			'columnWidth' => '33',
-			'description' => '"Ascending": A->Z, or 1->100',
-			'options' => ['asc'=>'Ascending','desc'=>'Descending'],
-			'value'   => $data['sort_dir'] ?? 'asc'
-		]));
-		$inputfields->add(wire('modules')->get('InputfieldInteger')->setArray([
-			'name'        => 'entries_per_page',
-			'label'       => 'Entries per page',
-			'columnWidth' => '33',
-			'description' => 'Default: 25',
-			'value'       => $data['entries_per_page'] ?? 25
-		]));
-	
-		// 6) Parameter textareas per field (with always set notes)
+		// Add parameter textareas for each field
 		foreach ($allFields as $fieldName) {
 			$fieldName = trim($fieldName);
 			if (!$fieldName) continue;
 	
 			$paramField = wire('modules')->get('InputfieldTextarea');
 			$paramField->name = 'param__' . $fieldName;
-			$paramField->columnWidth = '25';
-			$paramField->rows = '7';
-	
-			$fieldObj = wire('fields')->get($fieldName);
-			$label    = $fieldObj instanceof Field ? $fieldObj->label : $fieldName;
-			$paramField->label = "Parameters for column “{$label}”";
-	
-			// Existing value (if any)
-			$paramField->value = $data['param__' . $fieldName] ?? '';
+			$paramField->label = sprintf('Parameters for column "%s"', $fieldName);
 			$paramField->description = 'Optional: key=value per line';
+			$paramField->value = $data['param__' . $fieldName] ?? '';
+			$paramField->columnWidth = 25;
 	
-			// **Notes**: Always display, depending on field type
-			if (str_starts_with($fieldName, 'virtual__')) {
-				$paramField->notes =
-	"**Virtual Fields**  
-	– `selector=…` (e.g., `sum(products.product_id.price)`)  
-	– `label=…` (optional)  
-	– `format=int|number|currency|percent|custom=…`  
-	– `separator=…` (optional, Default: `, `)  
-	– `tooltip_field=…` (optional)  
-	– `tooltip_prefix=…` (optional)  
-	– `tooltip_format=date(format)` (optional)";
-			}
-			elseif ($fieldObj instanceof Field && strpos(get_class($fieldObj->type), 'FieldtypeTable') !== false) {
-				$paramField->notes =
-	"**TableField**  
-	– `label=…` (optional)  
-	– `table_column=…` (**Required!**)  
-	– `resolve_page=…` (optional)  
-	– `as_link=1` (optional)  
-	– `separator=…` (optional, Default: `, `)  
-	– `format_raw=…` (optional, e.g., `d.m.Y`)  
-	– `tooltip_field=…` (optional)  
-	– `tooltip_prefix=…` (optional)  
-	– `tooltip_format=date(format)` (optional)";
-			}
-			elseif ($fieldObj instanceof Field && strpos(get_class($fieldObj->type), 'FieldtypePage') !== false) {
-				$paramField->notes =
-	"**PageField**  
-	– `label=…` (optional)  
-	– `resolve_page=…` (**Required!**)  
-	– `as_link=1` (optional)  
-	– `separator=…` (optional)  
-	– `tooltip_field=…` (optional)  
-	– `tooltip_prefix=…` (optional)  
-	– `tooltip_format=date(format)` (optional)";
-			}
-			else {
-				// Primitive fields
-				$paramField->notes =
-	"**Primitive Fields**  
-	– `label=…` (optional)  
-	– `edit_link=1` (optional)  
-	– `separator=…` (optional, Default: `, `)  
-	– `tooltip_field=…` (optional)  
-	– `tooltip_prefix=…` (optional)  
-	– `tooltip_format=date(format)` (optional)";
-			}
+			// Add notes based on the field type
+			$paramField->notes = self::getFieldNotes($fieldName);
 	
 			$inputfields->add($paramField);
 		}
 	
 		return $inputfields;
+	}
+	
+	// Helper function to fetch user template fields
+	private static function getUserTemplateFields(): array {
+		$userTemplate = wire('templates')->get('user');
+		$fieldOptions = [];
+		foreach ($userTemplate->fields as $field) {
+			$fieldOptions[$field->name] = $field->label;
+		}
+		return $fieldOptions;
+	}
+	
+	// Helper function to fetch available roles
+	private static function getAvailableRoles(): array {
+		$roleOptions = [];
+		foreach (wire('roles') as $role) {
+			$roleOptions[$role->name] = $role->name;
+		}
+		return $roleOptions;
+	}
+	
+	// Helper function to generate notes based on field type
+	private static function getFieldNotes(string $fieldName): string {
+		if (str_starts_with($fieldName, 'virtual__')) {
+			return "**Virtual Fields**\n"
+				. "- `selector=...` (e.g., `sum(products.product_id.price)`)\n"
+				. "- `label=...` (optional)\n"
+				. "- `format=int|number|currency|percent|custom=...`\n"
+				. "- `separator=...` (optional, Default: `, `)\n"
+				. "- `tooltip_field=...` (optional)\n"
+				. "- `tooltip_prefix=...` (optional)\n"
+				. "- `tooltip_format=date(format)` (optional)";
+		}
+	
+		$field = wire('fields')->get($fieldName);
+		if ($field instanceof Field && strpos(get_class($field->type), 'FieldtypeTable') !== false) {
+			return "**TableField**\n"
+				. "- `label=...` (optional)\n"
+				. "- `table_column=...` (**Required!**)\n"
+				. "- `resolve_page=...` (optional)\n"
+				. "- `as_link=1` (optional)\n"
+				. "- `separator=...` (optional, Default: `, `)\n"
+				. "- `format_raw=...` (optional, e.g., `d.m.Y`)\n"
+				. "- `tooltip_field=...` (optional)\n"
+				. "- `tooltip_prefix=...` (optional)\n"
+				. "- `tooltip_format=date(format)` (optional)";
+		}
+	
+		if ($field instanceof Field && strpos(get_class($field->type), 'FieldtypePage') !== false) {
+			return "**PageField**\n"
+				. "- `label=...` (optional)\n"
+				. "- `resolve_page=...` (**Required!**)\n"
+				. "- `as_link=1` (optional)\n"
+				. "- `separator=...` (optional)\n"
+				. "- `tooltip_field=...` (optional)\n"
+				. "- `tooltip_prefix=...` (optional)\n"
+				. "- `tooltip_format=date(format)` (optional)";
+		}
+	
+		// Default notes for primitive fields
+		return "**Primitive Fields**\n"
+			. "- `label=...` (optional)\n"
+			. "- `format_raw=no|yes` (Optional: Define custom labels for 0 and 1)\n"
+			. "- `edit_link=1` (optional)\n"
+			. "- `separator=...` (optional, Default: `, `)\n"
+			. "- `tooltip_field=...` (optional)\n"
+			. "- `tooltip_prefix=...` (optional)\n"
+			. "- `tooltip_format=date(format)` (optional)";
 	}
 	
 }
