@@ -140,7 +140,7 @@ The module supports advanced rendering and filtering features:
 
 ## 📝 Examples
 
-### Example 1: Displaying a TableField with Tooltips
+## Example 1: Displaying a TableField with Tooltips
 
 This configuration defines a column that displays purchased products with a tooltip showing the purchase date.
 
@@ -193,11 +193,11 @@ This example demonstrates how to leverage the **ProcessUserDataTable** module to
 
 ---
 
-# Example 2: Virtual Field for Aggregate Value
+## Example 2: Virtual Field for Aggregate Value
 
 The **ProcessUserDataTable** module allows you to define virtual fields for calculated or aggregate values using the `virtual__` prefix. This example demonstrates how to configure a virtual field to display the total revenue from products using the `sum()` function.
 
-## Configuration
+### Configuration
 
 Add the following configuration in the **Parameters** textarea for the virtual field:
 ```
@@ -206,7 +206,7 @@ label=Total Revenue
 format=currency
 ```
 
-## Explanation of Parameters
+### Explanation of Parameters
 
 | Parameter   | Required | Description                                                                 | Example                        |
 |-------------|:--------:|-----------------------------------------------------------------------------|--------------------------------|
@@ -229,7 +229,7 @@ format=currency
 - **`percent`**: Formats the value as a percentage.
 - **`custom=...`**: Apply a custom format string using `sprintf()` syntax.
 
-## Result in the Admin Interface
+### Result in the Admin Interface
 
 When applied, this configuration will:
 
@@ -237,7 +237,7 @@ When applied, this configuration will:
 2. Calculate the total sum of all `price` values in the `products` field.
 3. Format the value as currency (e.g., `€ 1,234.56`).
 
-## Example Table Output
+### Example Table Output
 
 | User          | Total Revenue |
 |---------------|---------------|
@@ -248,11 +248,11 @@ This configuration allows you to create insightful aggregate columns in your tab
 
 ---
 
-# Example 3: Checkbox with Custom Labels
+## Example 3: Checkbox with Custom Labels
 
 The **ProcessUserDataTable** module allows you to customize how checkbox fields are displayed in the table. You can define specific labels for the `true` (checked) and `false` (unchecked) states using the `format_raw` parameter.
 
-## Configuration
+### Configuration
 
 To customize the labels for a checkbox field, use the following configuration in the **Parameters** textarea:
 ```
@@ -260,7 +260,7 @@ label=Status
 format_raw=Inactive|Active
 ```
 
-## Explanation of Parameters
+### Explanation of Parameters
 
 | Parameter   | Required | Description                                                                 | Example                  |
 |-------------|:--------:|-----------------------------------------------------------------------------|--------------------------|
@@ -275,7 +275,7 @@ If `format_raw` is not specified, the module will use default labels:
 - **Unchecked**: Displays as `Disabled`.
 - **Checked**: Displays as `Enabled`.
 
-## Result in the Admin Interface
+### Result in the Admin Interface
 
 When applied, this configuration will:
 
@@ -283,7 +283,7 @@ When applied, this configuration will:
 2. Display the label **"Inactive"** for unchecked checkboxes.
 3. Display the label **"Active"** for checked checkboxes.
 
-## Example Table Output
+### Example Table Output
 
 | User          | Status       |
 |---------------|--------------|
