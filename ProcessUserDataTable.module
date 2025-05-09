@@ -71,7 +71,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	 * @param string $fieldName The name of the field
 	 * @param mixed|null $rawValue Optional raw value to use instead of fetching from the Page object
 	 * @return string The formatted field value as a string
-	 */
+	 
 	protected function formatFieldValue(Page $page, string $fieldName, $rawValue = null): string {
 		// Check if the field exists on the Page object
 		if (!$page->hasField($fieldName)) {
@@ -87,6 +87,64 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 		$formatted = $page->getFormatted($fieldName);
 		return is_scalar($formatted) ? (string) $formatted : '';
 	}
+	*/
+	
+	
+	/**
+	 * Centralized method to format values.
+	 *
+	 * Handles various formats such as integers, numbers, currency, percentages,
+	 * and custom patterns. Supports localization for currency formatting.
+	 *
+	 * @param mixed $value The value to format.
+	 * @param array $params Additional parameters to customize formatting, including:
+	 *  - 'format': The desired format (e.g., 'int', 'number', 'currency=USD', 'percent', 'custom=...').
+	 *  - 'locale': (Optional) Locale for currency or localized formatting (e.g., 'en_US', 'de_DE').
+	 * @return string The formatted value as a string.
+	 */
+protected function formatValue($value, array $params = []): string {
+		 // Default format
+		 $format = strtolower($params['format'] ?? '');
+	 
+		 // Handle null or empty values
+		 if ($value === null || $value === '') {
+			 return '–'; // Placeholder for empty values
+		 }
+	 
+		 // Handle custom mapping with "format(...)"
+		 if (preg_match('/^format\((.+)\)$/', $format, $matches)) {
+			 $mappings = [];
+			 $mappingString = $matches[1]; // Extract "0=No, 1=Yes"
+			 $pairs = explode(',', $mappingString);
+			 foreach ($pairs as $pair) {
+				 list($key, $label) = explode('=', $pair, 2);
+				 $mappings[trim($key)] = trim($label);
+			 }
+			 // Return the mapped label if it exists
+			 return $mappings[(string) $value] ?? (string) $value;
+		 }
+	 
+		 // Handle other formats (e.g., int, number, currency, etc.)
+		 switch (true) {
+			 case $format === 'int':
+				 return (string) round($value);
+			 case $format === 'number':
+				 return number_format((float) $value, 2, ',', '');
+			 case str_starts_with($format, 'currency='):
+				 $currencyCode = substr($format, 9); // Extract currency code
+				 $locale = $params['locale'] ?? 'en_US'; // Default locale
+				 $formatter = new \NumberFormatter($locale, \NumberFormatter::CURRENCY);
+				 $formattedValue = $formatter->formatCurrency((float) $value, $currencyCode) ?: (string) $value;
+				 return preg_replace('/(\p{Sc})(\S)/u', '$1 $2', $formattedValue); // Add space after currency symbol
+			 case $format === 'percent':
+				 return round((float) $value * 100) . ' %';
+			 case str_starts_with($format, 'custom='):
+				 $pattern = substr($format, 7); // Extract custom pattern
+				 return sprintf($pattern, $value);
+			 default:
+				 return $this->sanitizer->entities((string) $value); // Default: sanitize and return as string
+		 }
+	 }
 	
 	/**
 	 * Generate a tooltip attribute based on the provided raw value and parameters.
@@ -343,7 +401,8 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	 * @return string The rendered output for the field
 	 */
 	 
-	 /*	protected function renderPrimitiveField(Page $user, string $fieldName, array $params): string {
+
+/*	 protected function renderPrimitiveField(Page $user, string $fieldName, array $params): string {
 	 
 		 $editLink = !empty($params['edit_link']);
 		 $sep = $params['separator'] ?? ', ';
@@ -380,7 +439,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 		 return $output;
 	 } */
 
-protected function renderPrimitiveField(Page $user, string $fieldName, array $params): string {
+/* protected function renderPrimitiveField(Page $user, string $fieldName, array $params): string {
 	 
 		 $editLink = !empty($params['edit_link']);
 		 $sep = $params['separator'] ?? ', ';
@@ -439,7 +498,42 @@ protected function renderPrimitiveField(Page $user, string $fieldName, array $pa
 			 return "<span{$tooltip}>{$output}</span>";
 		 }
 		 return $output;
-	 }
+	 } */
+
+protected function renderPrimitiveField(Page $user, string $fieldName, array $params): string {
+	$editLink = !empty($params['edit_link']);
+	$sep = $params['separator'] ?? ', ';
+	$resolvePage = $params['resolve_page'] ?? '';
+	
+	// Get the field value
+	$value = $user->get($fieldName);
+
+	// Get the field object to check its type
+	$field = wire('fields')->get($fieldName);
+
+	// Handle FieldtypeCheckbox and FieldtypeToggle
+	if ($field->type instanceof FieldtypeCheckbox || $field->type instanceof FieldtypeToggle) {
+		$value = $value == "1" ? 1 : 0; // Normalize checkbox values to 1 or 0
+	}
+
+	// Format the value using the centralized method
+	$output = $this->formatValue($value, $params);
+
+	// Render tooltip if configured
+	$tooltip = $this->renderTooltipValue(
+		$user->get($params['tooltip_field'] ?? null),
+		$params
+	);
+
+	// Render output with optional edit link or tooltip
+	if ($editLink) {
+		return "<a href='{$user->editUrl}'{$tooltip}>{$output}</a>";
+	}
+	if ($tooltip) {
+		return "<span{$tooltip}>{$output}</span>";
+	}
+	return $output;
+}
 	
 	/**
 	 * Render a virtual field based on a selector expression.
@@ -453,7 +547,7 @@ protected function renderPrimitiveField(Page $user, string $fieldName, array $pa
 	 *  - `format`: Output format (`int`, `number`, `currency`, `percent`, `custom=...`)
 	 * @return string The rendered content based on the selector expression
 	 */
-	protected function renderSelectorExpression(Page $user, string $expr, array $params = []): string {
+	/* protected function renderSelectorExpression(Page $user, string $expr, array $params = []): string {
 		// Direct access to user property if no function is specified
 		if (preg_match('/^[A-Za-z_]\w*$/', $expr)) {
 			$raw = $user->{$expr};
@@ -525,6 +619,58 @@ protected function renderPrimitiveField(Page $user, string $fieldName, array $pa
 			default:
 				return (string) $result;
 		}
+	} */
+	
+	protected function renderSelectorExpression(Page $user, string $expr, array $params = []): string {
+		// Direct access to user property if no function is specified
+		if (preg_match('/^[A-Za-z_]\w*$/', $expr)) {
+			$raw = $user->{$expr};
+			return $this->formatValue($raw, $params);
+		}
+	
+		// Allowed functions: sum(), avg(), min(), max(), count(), join(...)
+		if (!preg_match('/^(sum|avg|min|max|count|join)\(([\w\.]+)(?:,\s*[\'"]?(.*?)[\'"]?)?\)$/', $expr, $matches)) {
+			return "<span style='color:#b00;'>⚠️ Invalid expression: {$this->sanitizer->entities($expr)}</span>";
+		}
+	
+		$func = $matches[1];
+		$fieldPath = $matches[2];
+		$joinSep = $matches[3] ?? ', ';
+	
+		// Resolve nested field path
+		$data = $this->resolveNestedField($user, $fieldPath);
+		if (!is_array($data)) return '–';
+	
+		// Filter out non-scalar values
+		$data = array_filter($data, fn($v) => is_scalar($v));
+	
+		$result = null;
+	
+		// Apply aggregate function
+		switch ($func) {
+			case 'sum':
+				$result = array_sum($data);
+				break;
+			case 'avg':
+				$result = count($data) ? array_sum($data) / count($data) : null;
+				break;
+			case 'min':
+				$result = count($data) ? min($data) : null;
+				break;
+			case 'max':
+				$result = count($data) ? max($data) : null;
+				break;
+			case 'count':
+				$result = count($data);
+				break;
+			case 'join':
+				return implode($joinSep, $data);
+		}
+	
+		if (!isset($result)) return '–';
+	
+		// Format the result using the centralized method
+		return $this->formatValue($result, $params);
 	}
 	
 	/**
