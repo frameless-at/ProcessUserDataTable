@@ -3,6 +3,50 @@
 All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
+
+## [2.3.3] – 2025-05-10
+
+### Changed
+- Removed the obsolete `format_raw` parameter from both field configuration and documentation.
+- Updated notes for **Primitive Fields** and **Virtual Fields**:
+  - Added support for the `format` parameter, allowing formatting options such as `int`, `number`, `currency`, `percent`, and custom patterns.
+  - Documented the new `locale` parameter for currency formatting, enabling localized output (e.g., `locale=en_US`).
+- Updated notes for **TableField**:
+  - Confirmed that the `format` parameter is not supported for TableFields and adjusted the field notes accordingly.
+- Ensured field documentation aligns with the current functionality for all field types.
+
+### Links
+- [Commit dcaade87a05814f5ec305c243803094bcedd9c15](https://github.com/frameless-at/ProcessUserDataTable/commit/dcaade87a05814f5ec305c243803094bcedd9c15)
+
+---
+
+## [2.3.2] – 2025-05-10
+
+### Added
+- Introduced a centralized `formatValue()` method for standardized value formatting:
+  - Supports formats such as `int`, `number`, `currency`, `percent`, and custom patterns.
+  - Added localization support for currency formatting using `NumberFormatter`.
+  - Introduced a new CONFIG parameter `locale` to specify localization options for currency.
+  - Handles custom mappings like `format=0:No,1:Yes`.
+  - Improved handling of null or empty values with placeholders (`–`).
+- Improved support for rendering table columns with dynamic content in both headers and data cells.
+  - Added `textAlign` parameter to control text alignment (`left`, `center`, `right`).
+
+### Changed
+- Refactored column formatting logic in the `renderColumn()` method for consistency and flexibility.
+- Enhanced tooltip generation with support for `tooltip_field`, `tooltip_prefix`, and `tooltip_format` parameters.
+- Improved handling of `FieldtypeCheckbox` and `FieldtypeToggle` fields to normalize values and apply dynamic labels.
+- Updated the `renderSelectorExpression()` method to handle aggregate functions (`sum`, `avg`, etc.) and nested field paths (e.g., `products.price`) with better error handling.
+
+### Fixed
+- Addressed minor bugs and inconsistencies in table column rendering.
+- Resolved edge cases in sorting and pagination logic for user data tables.
+
+### Links
+- [Commit fcb63f2](https://github.com/frameless-at/ProcessUserDataTable/commit/fcb63f2d7036bdb7b0d0f08b71916b84b14436a3)
+
+---
+
 ## [2.3.1] – 2025-05-08
 ### Added
 - Support for `FieldtypeCheckbox` and `FieldtypeToggle` fields in the `renderPrimitiveField` method.
