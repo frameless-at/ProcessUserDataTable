@@ -4,6 +4,15 @@ All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.3.4] – 2025-05-10
+
+### Added
+- Support for field type select (checkbox) fields.
+
+[Commit 377ad45a](https://github.com/frameless-at/ProcessUserDataTable/commit/377ad45a1aa2be8fb2ccc1ce23b45cca7ca3b883)
+
+---
+
 ## [2.3.3] – 2025-05-10
 
 ### Changed
