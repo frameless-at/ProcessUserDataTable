@@ -10,7 +10,7 @@
  * @author frameless Media
  * @link   https://frameless.at
  * @license GNU/GPL v2
- * @version 2.3.3
+ * @version 2.3.4
  */
 
 class ProcessUserDataTable extends Process implements Module, ConfigurableModule {
@@ -23,7 +23,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	public static function getModuleInfo(): array {
 		return [
 			'title' => 'User Data Table',
-			'version' => '2.3.3',
+			'version' => '2.3.4',
 			'summary' => 'Displays a configurable table of user fields in the admin interface.',
 			'author' => 'frameless Media',
 			'icon' => 'users',
@@ -181,6 +181,8 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 				 return $this->sanitizer->entities((string) $value); // Default: sanitize and return as string
 		 }
 	 }
+
+
 	
 	/**
 	 * Generate a tooltip attribute based on the provided raw value and parameters.
@@ -437,40 +439,47 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	 * @return string The rendered output for the field
 	 */
 	 
-	 protected function renderPrimitiveField(Page $user, string $fieldName, array $params): string {
-		 $editLink = !empty($params['edit_link']);
-		 $sep = $params['separator'] ?? ', ';
-		 $resolvePage = $params['resolve_page'] ?? '';
-	 
-		 // Get the field value
-		 $value = $user->get($fieldName);
-	 
-		 // Get the field object to check its type
-		 $field = wire('fields')->get($fieldName);
-	 
-		 // Handle FieldtypeCheckbox and FieldtypeToggle
-		 if ($field->type instanceof FieldtypeCheckbox || $field->type instanceof FieldtypeToggle) {
-			 $value = $value == "1" ? 1 : 0; // Normalize checkbox values to 1 or 0
-		 }
-	 
-		 // Format the value using the centralized method
-		 $output = $this->formatValue($value, $params);
-	 
-		 // Render tooltip if configured
-		 $tooltip = $this->renderTooltipValue(
-			 $user->get($params['tooltip_field'] ?? null),
-			 $params
-		 );
-	 
-		 // Render output with optional edit link or tooltip
-		 if ($editLink) {
-			 return "<a href='{$user->editUrl}'{$tooltip}>{$output}</a>";
-		 }
-		 if ($tooltip) {
-			 return "<span{$tooltip}>{$output}</span>";
-		 }
-		 return $output;
-	 }
+	protected function renderPrimitiveField(Page $user, string $fieldName, array $params): string {
+		$editLink = !empty($params['edit_link']);
+		$sep = $params['separator'] ?? ', ';
+	
+		// Get the field value
+		$value = $user->get($fieldName);
+	
+		// Handle Fieldtype Select Options (SelectableOptionArray)
+		if ($value instanceof SelectableOptionArray) {
+			$labels = [];
+			foreach ($value as $option) {
+				$labels[] = $option->title; // Get the title of each selected option
+			}
+			return implode($sep, $labels); // Join the labels with a separator
+		}
+	
+		// Handle other field types (e.g., checkboxes, toggles)
+		$field = wire('fields')->get($fieldName);
+		if ($field->type instanceof FieldtypeCheckbox || $field->type instanceof FieldtypeToggle) {
+			$value = $value == "1" ? 1 : 0; // Normalize checkbox values to 1 or 0
+		}
+	
+		// Format the value using the centralized method
+		$output = $this->formatValue($value, $params);
+	
+		// Render tooltip if configured
+		$tooltip = $this->renderTooltipValue(
+			$user->get($params['tooltip_field'] ?? null),
+			$params
+		);
+	
+		// Render output with optional edit link or tooltip
+		if ($editLink) {
+			return "<a href='{$user->editUrl}'{$tooltip}>{$output}</a>";
+		}
+		if ($tooltip) {
+			return "<span{$tooltip}>{$output}</span>";
+		}
+		return $output;
+	}
+
 	
 	/**
 	 * Render a virtual field based on a selector expression.
