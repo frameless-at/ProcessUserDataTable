@@ -895,54 +895,61 @@ public static function getModuleConfigInputfields(array $data): InputfieldWrappe
  * @return string The default configuration for this field.
  */
 private static function getDefaultConfigForField(string $fieldName): string {
-	if (str_starts_with($fieldName, 'virtual__')) {
-		return "label=Virtual Field (optional)\n"
-			. "textAlign=left\n"
-			. "format=int|number|currency|percent|custom=...\n"
-			. "separator=, (optional)\n"
-			. "tooltip_field=… (optional)\n"
-			. "tooltip_prefix=… (optional)";
-	}
-
-	$field = wire('fields')->get($fieldName);
-	if ($field instanceof Field && strpos(get_class($field->type), 'FieldtypeTable') !== false) {
-		return "label=Table Field (optional)\n"
-			. "table_column=… (**Required**)\n"
-			. "textAlign=left\n"
-			. "resolve_page=… (optional)\n"
-			. "as_link=1 (optional)\n"
-			. "separator=, (optional)\n"
-			. "tooltip_field=… (optional)\n"
-			. "tooltip_prefix=… (optional)";
-	}
-
-	if ($field instanceof Field && strpos(get_class($field->type), 'FieldtypePage') !== false) {
-		return "label=Page Field (optional)\n"
-			. "resolve_page=… (**Required**)\n"
-			. "textAlign=left\n"
-			. "as_link=1 (optional)\n"
-			. "separator=, (optional)\n"
-			. "tooltip_field=… (optional)\n"
-			. "tooltip_prefix=… (optional)";
-	}
-
-	// Default for primitive fields
-	return "label=Primitive Field (optional)\n"
-		. "textAlign=left\n"
-		. "edit_link=1 (optional)\n"
-		. "separator=, (optional)\n"
-		. "tooltip_field=… (optional)\n"
-		. "tooltip_prefix=… (optional)";
-}
+	 if (str_starts_with($fieldName, 'virtual__')) {
+		 return "label=Virtual Field (optional)\n"
+			 . "textAlign=left\n"
+			 . "format=int|number|currency|percent|custom=...\n"
+			 . "locale=en_US (optional)\n" // Added locale
+			 . "separator=, (optional)\n"
+			 . "tooltip_field=... (optional)\n"
+			 . "tooltip_prefix=... (optional)";
+	 }
+ 
+	 $field = wire('fields')->get($fieldName);
+	 if ($field instanceof Field && strpos(get_class($field->type), 'FieldtypeTable') !== false) {
+		 return "label=Table Field (optional)\n"
+			 . "table_column=... (**Required**)\n"
+			 . "textAlign=left\n"
+			 . "resolve_page=... (optional)\n"
+			 . "as_link=1 (optional)\n"
+			 . "separator=, (optional)\n"
+			 . "tooltip_field=... (optional)\n"
+			 . "tooltip_prefix=... (optional)\n"
+			 . "tooltip_format=date(format) (optional)";
+	 }
+ 
+	 if ($field instanceof Field && strpos(get_class($field->type), 'FieldtypePage') !== false) {
+		 return "label=Page Field (optional)\n"
+			 . "resolve_page=... (**Required**)\n"
+			 . "textAlign=left\n"
+			 . "as_link=1 (optional)\n"
+			 . "separator=, (optional)\n"
+			 . "tooltip_field=... (optional)\n"
+			 . "tooltip_prefix=... (optional)\n"
+			 . "tooltip_format=date(format) (optional)";
+	 }
+ 
+	 // Default for primitive fields
+	 return "label=Primitive Field (optional)\n"
+		 . "textAlign=left\n"
+		 . "format=int|number|currency|percent|custom=...\n" // Added format
+		 . "locale=en_US (optional)\n" // Added locale
+		 . "edit_link=1 (optional)\n"
+		 . "separator=, (optional)\n"
+		 . "tooltip_field=... (optional)\n"
+		 . "tooltip_prefix=... (optional)\n"
+		 . "tooltip_format=date(format) (optional)";
+ }
 	
 	// Helper function to generate notes based on field type
-	private static function getFieldNotes(string $fieldName): string {
+private static function getFieldNotes(string $fieldName): string {
 		if (str_starts_with($fieldName, 'virtual__')) {
 			return "**Virtual Fields**\n"
 				. "- `selector=...` (e.g., `sum(products.product_id.price)`)\n"
 				. "- `label=...` (optional)\n"
-				. "- `textAlign=left|center|right` (optional, default: `left`)\n"  // NEW PARAMETER
+				. "- `textAlign=left|center|right` (optional, default: `left`)\n"
 				. "- `format=int|number|currency|percent|custom=...`\n"
+				. "- `locale=en_US` (optional, for currency formatting)\n" // Added locale
 				. "- `separator=...` (optional, Default: `, `)\n"
 				. "- `tooltip_field=...` (optional)\n"
 				. "- `tooltip_prefix=...` (optional)\n"
@@ -953,12 +960,11 @@ private static function getDefaultConfigForField(string $fieldName): string {
 		if ($field instanceof Field && strpos(get_class($field->type), 'FieldtypeTable') !== false) {
 			return "**TableField**\n"
 				. "- `label=...` (optional)\n"
-				. "- `table_column=...` (**Required!**)\n"
-				. "- `textAlign=left|center|right` (optional, default: `left`)\n"  // NEW PARAMETER
+				. "- `table_column=...` (**Required**)\n"
+				. "- `textAlign=left|center|right` (optional, default: `left`)\n"
 				. "- `resolve_page=...` (optional)\n"
 				. "- `as_link=1` (optional)\n"
 				. "- `separator=...` (optional, Default: `, `)\n"
-				. "- `format_raw=...` (optional, e.g., `d.m.Y`)\n"
 				. "- `tooltip_field=...` (optional)\n"
 				. "- `tooltip_prefix=...` (optional)\n"
 				. "- `tooltip_format=date(format)` (optional)";
@@ -967,8 +973,8 @@ private static function getDefaultConfigForField(string $fieldName): string {
 		if ($field instanceof Field && strpos(get_class($field->type), 'FieldtypePage') !== false) {
 			return "**PageField**\n"
 				. "- `label=...` (optional)\n"
-				. "- `resolve_page=...` (**Required!**)\n"
-				. "- `textAlign=left|center|right` (optional, default: `left`)\n"  // NEW PARAMETER
+				. "- `resolve_page=...` (**Required**)\n"
+				. "- `textAlign=left|center|right` (optional, default: `left`)\n"
 				. "- `as_link=1` (optional)\n"
 				. "- `separator=...` (optional)\n"
 				. "- `tooltip_field=...` (optional)\n"
@@ -976,11 +982,12 @@ private static function getDefaultConfigForField(string $fieldName): string {
 				. "- `tooltip_format=date(format)` (optional)";
 		}
 	
-		// Default notes for primitive fields
+		// Notes for primitive fields
 		return "**Primitive Fields**\n"
 			. "- `label=...` (optional)\n"
-			. "- `textAlign=left|center|right` (optional, default: `left`)\n"  // NEW PARAMETER
-			. "- `format_raw=no|yes` (Optional: Define custom labels for 0 and 1)\n"
+			. "- `textAlign=left|center|right` (optional, default: `left`)\n"
+			. "- `format=int|number|currency|percent|custom=...`\n" // Added format
+			. "- `locale=en_US` (optional, for currency formatting)\n" // Added locale
 			. "- `edit_link=1` (optional)\n"
 			. "- `separator=...` (optional, Default: `, `)\n"
 			. "- `tooltip_field=...` (optional)\n"
