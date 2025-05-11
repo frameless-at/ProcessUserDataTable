@@ -4,6 +4,20 @@ All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.3.5] – 2025-05-11
+
+### Added
+
+- **New functionality for table rendering**:
+  - Introduced an edit link for configuration directly in the table if no fields are configured.
+  - Improved table rendering structure:
+    - Added a responsive wrapper with classes (`pw-table-responsive uk-overflow-auto`).
+    - Enhanced table classes for compatibility with ProcessWire admin structure (`AdminDataTable`, `AdminDataList`, etc.).
+
+[Commit Link](https://github.com/frameless-at/ProcessUserDataTable/commit/5882b6427cb11944ada68bfc7bec297cab9e4a45)
+
+---
+
 ## [2.3.4] – 2025-05-10
 
 ### Added
