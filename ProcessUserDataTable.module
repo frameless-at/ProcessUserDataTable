@@ -10,7 +10,7 @@
  * @author frameless Media
  * @link   https://frameless.at
  * @license GNU/GPL v2
- * @version 2.3.4
+ * @version 2.3.5
  */
 
 class ProcessUserDataTable extends Process implements Module, ConfigurableModule {
@@ -23,7 +23,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	public static function getModuleInfo(): array {
 		return [
 			'title' => 'User Data Table',
-			'version' => '2.3.4',
+			'version' => '2.3.5',
 			'summary' => 'Displays a configurable table of user fields in the admin interface.',
 			'author' => 'frameless Media',
 			'icon' => 'users',
@@ -607,129 +607,136 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	  * @param array $configData Configuration data passed from the module settings
 	  * @return string Rendered HTML table markup
 	  */
-	 protected function renderTable($configData) {
-		 // Show message if no fields are configured
-		 if (empty($this->columns)) return '<p>No fields configured.</p>';
-	 
-		 // Determine pagination and sorting defaults
-		 $limit = max(1, (int) ($configData['entries_per_page'] ?? 25));
-		 $defaultSortField = $configData['sort_field'] ?? '';
-		 $defaultSortDir = $configData['sort_dir'] ?? 'asc';
-	 
-		 // Sort field and direction from query string
-		 $sortField = $this->input->get('sort') ?: $defaultSortField;
-		 $sortDir = strtolower($this->input->get('dir') ?: $defaultSortDir);
-		 if (!in_array($sortDir, ['asc', 'desc'])) $sortDir = 'asc';
-	 
-		 // Filter users by roles
-		 $roles = $configData['user_roles'] ?? [];
-		 $roleNames = array_map('trim', $roles);
-	 
-		 if (!empty($roleNames)) {
-			 if (($configData['roles_mode'] ?? 'or') === 'and') {
-				 // Strict matching (AND): user must have exactly all selected roles
-				 $requiredRoleIDs = [];
-				 foreach ($roleNames as $name) {
-					 $role = wire('roles')->get($name);
-					 if ($role) $requiredRoleIDs[] = (int) $role->id;
-				 }
-				 sort($requiredRoleIDs);
-				 $selector = "roles.name=" . implode('|', $roleNames);
-				 $allUsers = $this->users->find($selector);
-				 $filtered = array_filter($allUsers->getArray(), function($user) use ($requiredRoleIDs) {
-					 $userRoleIDs = array_map('intval', $user->roles->explode('id'));
-					 sort($userRoleIDs);
-					 return $userRoleIDs === $requiredRoleIDs;
-				 });
-				 $users = new PageArray();
-				 foreach ($filtered as $u) $users->add($u);
-			 } else {
-				 // OR matching: at least one role
-				 $selector = "roles.name=" . implode('|', $roleNames);
-				 $users = $this->users->find($selector);
-			 }
-		 } else {
-			 // No filter: all users with any role
-			 $users = $this->users->find("roles.name!=");
-		 }
-	 
-		 if (!count($users)) return '<p>No users found.</p>';
-	 
-		 // Apply sorting
-		 if ($sortField && in_array($sortField, array_column($this->columns, 'user_field'))) {
-			 $usersArray = $users->getArray();
-	 
-			 // Special case: virtual column sorting
-			 if (str_starts_with($sortField, 'virtual__')) {
-				 $params = $this->parseParams($configData['param__' . $sortField] ?? '');
-				 $expr = $params['selector'] ?? '';
-				 usort($usersArray, function($a, $b) use ($sortDir, $params, $expr) {
-					 $valA = $this->renderSelectorExpression($a, $expr, $params);
-					 $valB = $this->renderSelectorExpression($b, $expr, $params);
-					 return $sortDir === 'desc'
-						 ? strnatcasecmp($valB, $valA)
-						 : strnatcasecmp($valA, $valB);
-				 });
-			 } else {
-				 // Normal field sorting
-				 usort($usersArray, function($a, $b) use ($sortField, $sortDir) {
-					 $valA = $a->get($sortField);
-					 $valB = $b->get($sortField);
-					 $valA = is_object($valA) ? (string) $valA : $valA;
-					 $valB = is_object($valB) ? (string) $valB : $valB;
-					 $result = strnatcasecmp((string) $valA, (string) $valB);
-					 return $sortDir === 'desc' ? -$result : $result;
-				 });
-			 }
-	 
-			 $users = new PageArray();
-			 foreach ($usersArray as $u) $users->add($u);
-		 }
-	 
-		 // Pagination
-		 $total = count($users);
-		 $start = max(0, (int) $this->input->get('start') ?? 0);
-		 $pageNum = floor($start / $limit) + 1;
-		 $pagedUsers = $users->slice($start, $limit);
-	 
-		 // Table header
-		 $out = "<table class='uk-table uk-table-striped'><thead><tr>";
-		 foreach ($this->columns as $col) {
-			 $out .= $this->renderColumn(null, $col, true); // Pass $isHeader = true for headers
-		 }
-		 $out .= "</tr></thead>";
-		 
-		 // Table rows
-		 $out .= "<tbody>";
-		 foreach ($pagedUsers as $user) {
-			 $out .= "<tr>";
-			 foreach ($this->columns as $col) {
-				 $out .= $this->renderColumn($user, $col); // Default: $isHeader = false
-			 }
-			 $out .= "</tr>";
-		 }
-		 $out .= "</tbody></table>";
-	 
-		 // Pagination links
-		 if ($total > $limit) {
-			 $pageCount = ceil($total / $limit);
-			 $out .= "<ul class='uk-pagination'>";
-			 for ($i = 1; $i <= $pageCount; $i++) {
-				 $class = $i == $pageNum ? 'uk-active' : '';
-				 $startVal = ($i - 1) * $limit;
-				 $query = http_build_query([
-					 'sort' => $sortField,
-					 'dir' => $sortDir,
-					 'start' => $startVal,
-				 ]);
-				 $url = $this->page->url . '?' . $query;
-				 $out .= "<li class='{$class}'><a href='{$url}'>{$i}</a></li>";
-			 }
-			 $out .= "</ul>";
-		 }
-	 
-		 return $out;
-	 }
+
+protected function renderTable($configData) {
+	$editlink = '<a class="ui-button ui-widget ui-corner-all ui-state-default" href="/cms/module/edit?name=ProcessUserDataTable&collapse_info=1">Configuration</a>';
+	
+	// Show message if no fields are configured
+	if (empty($this->columns)) return '<p>No fields configured.</p>'.$editlink;
+
+	// Determine pagination and sorting defaults
+	$limit = max(1, (int) ($configData['entries_per_page'] ?? 25));
+	$defaultSortField = $configData['sort_field'] ?? '';
+	$defaultSortDir = $configData['sort_dir'] ?? 'asc';
+
+	// Sort field and direction from query string
+	$sortField = $this->input->get('sort') ?: $defaultSortField;
+	$sortDir = strtolower($this->input->get('dir') ?: $defaultSortDir);
+	if (!in_array($sortDir, ['asc', 'desc'])) $sortDir = 'asc';
+
+	// Filter users by roles
+	$roles = $configData['user_roles'] ?? [];
+	$roleNames = array_map('trim', $roles);
+
+	if (!empty($roleNames)) {
+		if (($configData['roles_mode'] ?? 'or') === 'and') {
+			// Strict matching (AND): user must have exactly all selected roles
+			$requiredRoleIDs = [];
+			foreach ($roleNames as $name) {
+				$role = wire('roles')->get($name);
+				if ($role) $requiredRoleIDs[] = (int) $role->id;
+			}
+			sort($requiredRoleIDs);
+			$selector = "roles.name=" . implode('|', $roleNames);
+			$allUsers = $this->users->find($selector);
+			$filtered = array_filter($allUsers->getArray(), function($user) use ($requiredRoleIDs) {
+				$userRoleIDs = array_map('intval', $user->roles->explode('id'));
+				sort($userRoleIDs);
+				return $userRoleIDs === $requiredRoleIDs;
+			});
+			$users = new PageArray();
+			foreach ($filtered as $u) $users->add($u);
+		} else {
+			// OR matching: at least one role
+			$selector = "roles.name=" . implode('|', $roleNames);
+			$users = $this->users->find($selector);
+		}
+	} else {
+		// No filter: all users with any role
+		$users = $this->users->find("roles.name!=");
+	}
+
+	if (!count($users)) return '<p>No users found.</p>';
+
+	// Apply sorting
+	if ($sortField && in_array($sortField, array_column($this->columns, 'user_field'))) {
+		$usersArray = $users->getArray();
+
+		// Special case: virtual column sorting
+		if (str_starts_with($sortField, 'virtual__')) {
+			$params = $this->parseParams($configData['param__' . $sortField] ?? '');
+			$expr = $params['selector'] ?? '';
+			usort($usersArray, function($a, $b) use ($sortDir, $params, $expr) {
+				$valA = $this->renderSelectorExpression($a, $expr, $params);
+				$valB = $this->renderSelectorExpression($b, $expr, $params);
+				return $sortDir === 'desc'
+					? strnatcasecmp($valB, $valA)
+					: strnatcasecmp($valA, $valB);
+			});
+		} else {
+			// Normal field sorting
+			usort($usersArray, function($a, $b) use ($sortField, $sortDir) {
+				$valA = $a->get($sortField);
+				$valB = $b->get($sortField);
+				$valA = is_object($valA) ? (string) $valA : $valA;
+				$valB = is_object($valB) ? (string) $valB : $valB;
+				$result = strnatcasecmp((string) $valA, (string) $valB);
+				return $sortDir === 'desc' ? -$result : $result;
+			});
+		}
+
+		$users = new PageArray();
+		foreach ($usersArray as $u) $users->add($u);
+	}
+
+	// Pagination
+	$total = count($users);
+	$start = max(0, (int) $this->input->get('start') ?? 0);
+	$pageNum = floor($start / $limit) + 1;
+	$pagedUsers = $users->slice($start, $limit);
+
+	// Begin table output with ProcessWire admin structure
+	$out = "<div class='pw-table-responsive uk-overflow-auto'>";
+	$out .= "<table id='UserDataTable' class='AdminDataTable AdminDataList AdminDataTableSortable uk-table uk-table-divider uk-table-justify uk-table-small tablesorter' role='grid'>";
+	$out .= "<thead><tr role='row' class='tablesorter-headerRow'>";
+
+	// Table headers
+	foreach ($this->columns as $col) {
+		$out .= $this->renderColumn(null, $col, true); // Pass $isHeader = true for headers
+	}
+	$out .= "</tr></thead>";
+
+	// Table rows
+	$out .= "<tbody>";
+	foreach ($pagedUsers as $user) {
+		$out .= "<tr role='row'>";
+		foreach ($this->columns as $col) {
+			$out .= $this->renderColumn($user, $col); // Default: $isHeader = false
+		}
+		$out .= "</tr>";
+	}
+	$out .= "</tbody></table></div>";
+
+	// Pagination links
+	if ($total > $limit) {
+		$pageCount = ceil($total / $limit);
+		$out .= "<ul class='uk-pagination'>";
+		for ($i = 1; $i <= $pageCount; $i++) {
+			$class = $i == $pageNum ? 'uk-active' : '';
+			$startVal = ($i - 1) * $limit;
+			$query = http_build_query([
+				'sort' => $sortField,
+				'dir' => $sortDir,
+				'start' => $startVal,
+			]);
+			$url = $this->page->url . '?' . $query;
+			$out .= "<li class='{$class}'><a href='{$url}'>{$i}</a></li>";
+		}
+		$out .= "</ul>";
+	}
+
+	return $out.$editlink;
+}
 		 
 	/**
 	 * Parse configuration parameters from a multiline text string.
