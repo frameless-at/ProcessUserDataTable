@@ -1,5 +1,8 @@
 # ProcessUserDataTable Module
 
+Licensed under GNU/GPL v2, see LICENSE.TXT  
+Author: frameless Media · https://frameless.at  
+
 The **ProcessUserDataTable** module provides a highly configurable table of user-related data in the ProcessWire admin interface. It allows administrators to define how fields are displayed, apply advanced formatting, resolve Page references, handle virtual fields, and add tooltips, all through a unified configuration structure.
 
 ---
@@ -143,7 +146,7 @@ selector=FIELDNAME.SUBFIELD
 For FieldtypeTable fields, the syntax follows the format:
 ```
 selector=TABLEFIELD.IDFIELD.VALUEFIELD
-``
+```
 - `TABLEFIELD` – The FieldtypeTable field in the user template.
 - `IDFIELD` – The column in the table that references a Page ID.
 - `VALUEFIELD` – The field in the referenced Page from which the data is extracted.
@@ -165,6 +168,7 @@ selector=TABLEFIELD.IDFIELD.VALUEFIELD
 ### 🚀 **Summary:**
 - **2-segment structure** is for direct Page or PageArray fields.
 - **3-segment structure** is for complex data relationships in FieldtypeTable fields, maintaining links between rows and referenced Pages.
+
 ---
 
 
