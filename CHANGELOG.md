@@ -3,6 +3,35 @@
 All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
+## [2.3.6] – 2025-05-12
+
+### Changed
+- **Updated currency formatting syntax:**  
+  - `currency(CODE:LOCALE)` now replaces the outdated `currency=` format.  
+  - Locale is now integrated directly within the currency parameter, e.g., `currency(EUR:de_AT)`.
+
+- **New `map()` syntax for value mappings:**  
+  - New `format=map(KEY:VALUE,...)` parameter introduced for value mappings, e.g., `map(0:Inactive,1:Active)`.  
+  - This replaces the previous `format=0:No,1:Yes` format and provides a more structured syntax.
+
+- **Centralized formatting processing:**  
+  - Tooltip formatting is now fully processed through the `formatValue()` method, allowing consistent handling of all formatting types, including `date(...)`, `currency(...)`, `map(...)`, and `custom(...)`.
+
+- **Consolidated formatting options:**  
+  - New format structure applied across all field types:  
+    - `int | number | percent | currency(CODE:LOCALE) | date(FORMAT) | map(KEY:VALUE,...) | custom(SPRINTF)`.
+  - Removed `locale` parameter in favor of localized currency format syntax.
+
+- **Updated configuration and field notes:**  
+  - Adjusted `getDefaultConfigForField()` and `getFieldNotes()` to reflect the new formatting structure.
+  - Enhanced documentation clarity for table, page, and primitive field configurations.
+
+- updated README
+
+### Links
+- [Commit Link](https://github.com/frameless-at/ProcessUserDataTable/commit/b575a0e96e20bfd1066304f63ad8d44daf8d5dab)
+
+---
 
 ## [2.3.5] – 2025-05-11
 
