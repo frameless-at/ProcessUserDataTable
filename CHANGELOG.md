@@ -3,6 +3,17 @@
 All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
+## [2.3.7] – 2025-05-13
+
+### Changed
+- Revised sorting logic to support system fields (created, modified, id, title) without requiring explicit column configuration.
+- Unified sorting logic for both user-defined fields and system fields, ensuring consistent behavior across all sorting operations.
+- Improved data consistency by applying sorting after role filtering to maintain expected data structure and order.
+
+### Links
+- [Commit Link](https://github.com/frameless-at/ProcessUserDataTable/commit/76a431892a38a630cea93fcbc56796addff8252d)
+
+---
 ## [2.3.6] – 2025-05-12
 
 ### Changed
