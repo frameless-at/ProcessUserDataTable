@@ -130,7 +130,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	 *  - 'locale': (Optional) Locale for currency or localized formatting (e.g., 'en_US', 'de_DE').
 	 * @return string The formatted value as a string.
 	 */
-	 protected function formatValue($value, array $params = []): string {
+ 	protected function formatValue($value, array $params = []): string {
 		 // Fetch the format from parameters
 		 $format = trim($params['format'] ?? '');
 	 
@@ -192,7 +192,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	 
 				 // Return the mapped label if it exists
 				 return $mappings[(string) $value] ?? (string) $value;
-	 
+				 
 			 case $format === 'percent':
 				 return round((float) $value * 100) . ' %';
 	 
@@ -204,6 +204,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 				 return $this->sanitizer->entities((string) $value);
 		 }
 	 }
+
 
 	/**
 	 * Generate a tooltip attribute based on the provided raw value and parameters.
@@ -990,8 +991,7 @@ private static function getDefaultConfigForField(string $fieldName): string {
 			. "format=...(optional)\n"
 			. "tooltip_field=FIELDNAME (optional)\n"
 			. "tooltip_prefix=STRING (optional)\n"
-			. "tooltip_format=... (optional)\n"
-			. "FORMATTING OPTIONS: int | number | percent | currency(CODE:LOCALE) | date(FORMAT) | map(KEY:VALUE,...) | custom(SPRINTF)\n";
+			. "tooltip_format=... (optional)\n";
 	}
 
 	$field = wire('fields')->get($fieldName);
@@ -1006,8 +1006,7 @@ private static function getDefaultConfigForField(string $fieldName): string {
 			. "format=...(optional)\n"
 			. "tooltip_field=FIELDNAME (optional)\n"
 			. "tooltip_prefix=STRING (optional)\n"
-			. "tooltip_format=... (optional)\n"
-			. "FORMATTING OPTIONS: int | number | percent | currency(CODE:LOCALE) | date(FORMAT) | map(KEY:VALUE,...) | custom(SPRINTF)\n";
+			. "tooltip_format=... (optional)\n";
 	}
 
 	if ($field instanceof Field && strpos(get_class($field->type), 'FieldtypePage') !== false) {
@@ -1019,8 +1018,7 @@ private static function getDefaultConfigForField(string $fieldName): string {
 			. "format=...(optional)\n"
 			. "tooltip_field=FIELDNAME (optional)\n"
 			. "tooltip_prefix=STRING (optional)\n"
-			. "tooltip_format=... (optional)\n"
-			. "FORMATTING OPTIONS: int | number | percent | currency(CODE:LOCALE) | date(FORMAT) | map(KEY:VALUE,...) | custom(SPRINTF)\n";
+			. "tooltip_format=... (optional)\n";
 	}
 
 	// Default for primitive fields
@@ -1031,8 +1029,7 @@ private static function getDefaultConfigForField(string $fieldName): string {
 		. "separator=STRING (optional)\n"
 		. "tooltip_field=FIELDNAME (optional)\n"
 		. "tooltip_prefix=STRING (optional)\n"
-		. "tooltip_format=... (optional)\n"
-		. "FORMATTING OPTIONS: int | number | percent | currency(CODE:LOCALE) | date(FORMAT) | map(KEY:VALUE,...) | custom(SPRINTF)\n";
+		. "tooltip_format=... (optional)\n";
 }
 	
 	// Helper function to generate notes based on field type
