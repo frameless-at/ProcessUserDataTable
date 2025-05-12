@@ -1,357 +1,222 @@
 # ProcessUserDataTable Module
 
-The **ProcessUserDataTable** module displays a highly configurable table of user-related data in the ProcessWire admin interface. It allows admins to define how fields are displayed, apply formatting, and filter or sort user data.
-
-This document provides a detailed guide to configuring and using the module, ensuring you take full advantage of its features.
+The **ProcessUserDataTable** module provides a highly configurable table of user-related data in the ProcessWire admin interface. It allows administrators to define how fields are displayed, apply advanced formatting, resolve Page references, handle virtual fields, and add tooltips, all through a unified configuration structure.
 
 ---
 
 ## 📖 Table of Contents
 
-1. [Overview](#-overview)
-2. [Installation](#-installation)
-3. [Configuration](#-configuration)
-	- [Global Settings](#global-settings)
-	- [Field Type Parameters](#field-type-parameters)
-	- [Virtual Fields](#virtual-fields)
-4. [Rendering and Filtering Options](#-rendering-and-filtering-options)
-5. [Examples](#-examples)
-6. [FAQ](#-faq)
+1. [Overview](#overview)
+2. [Installation](#installation)
+3. [Configuration](#configuration)
+4. [Field Configuration Syntax](#field-configuration-syntax)
+5. [Configuration Parameters](#configuration-parameters)
+6. [Formatting Options](#formatting-options)
+7. [Examples](#examples)
+8. [FAQ](#faq)
 
 ---
 
 ## 🧐 Overview
 
-The **ProcessUserDataTable** module gives you the flexibility to:
+The **ProcessUserDataTable** module provides advanced data table functionality for user data, including:
 
-- Display fields from the **User** template.
-- Define custom virtual fields for calculated or aggregate values.
-- Filter users by roles or specific field values.
-- Sort and paginate user data.
-- Apply custom formatting and tooltips to field values.
+* Configurable data columns based on User template fields.
+* Virtual fields with aggregation, formatting, and mapping capabilities.
+* Tooltip content derived from field values, with configurable formatting.
+* Centralized formatting through `formatValue()` method.
+* Support for Page and PageArray fields with field resolution.
+* Currency formatting with locale support, e.g., `currency(EUR:de_AT)`.
 
 ---
 
 ## 🛠️ Installation
 
 1. **Download the Module**:
-   - Clone the repository:  
-	 ```bash
-	 git clone https://github.com/frameless-at/ProcessUserDataTable.git
-	 ```
-   - Or download the ZIP file and extract it into your `site/modules/` directory.
+
+   * Clone the repository:
+   `git clone https://github.com/frameless-at/ProcessUserDataTable.git`
+   * Or download and extract the ZIP into your `/site/modules/` directory.
 
 2. **Install via Admin**:
-   - Go to `Modules > Site > Add New`.
-   - Click **"Install"** for the ProcessUserDataTable module.
 
-3. **Verify Installation**:
-   - Navigate to the module’s settings under `Setup > User Data Table`.
+   * Navigate to `Modules > Site > Add New` and locate **ProcessUserDataTable**.
+
+3. **Configuration**:
+
+   * Navigate to `Setup > User Data Table` to define global settings and configure individual fields.
 
 ---
 
 ## ⚙️ Configuration
 
-### Global Settings
+Configuration is divided into:
 
-The module provides global configuration options to define default behavior:
-
-| Setting              | Description                                                                 | Example                                |
-|----------------------|-----------------------------------------------------------------------------|----------------------------------------|
-| `user_fields_select` | Select fields from the User template to display.                           | `email, first_name, last_name`         |
-| `extra_fields`       | Define additional virtual fields (comma-separated).                        | `virtual__sum, virtual__avgScore`      |
-| `user_roles`         | Filter users by specific roles.                                            | `editor, admin`                        |
-| `roles_mode`         | Define role condition: `or` (at least one) or `and` (all exactly).         | `or`                                   |
-| `sort_field`         | Default column to sort by.                                                 | `email` or `virtual__sum`              |
-| `sort_dir`           | Default sorting direction (`asc` or `desc`).                               | `asc`                                  |
-| `entries_per_page`   | Number of rows per page.                                                   | `25`                                   |
-
-These options are configurable in the module settings under `Setup > User Data Table`.
+1. **Global Settings:** Define global sorting, filtering, and pagination options.
+2. **Field Parameters:** Apply individual field configurations, including formatting, tooltips, and custom mappings.
 
 ---
 
-### Field Type Parameters
+## 📝 Field Configuration Syntax
 
-Each field displayed in the table can be customized using parameters in a key-value format. These parameters can be configured in the **Parameters** textarea for each field.
+Field configurations follow a strict key-value format, using the syntax:
 
-#### **Primitive Fields** (Text, Integer, DateTime, Checkbox, etc.)
-
-| Parameter         | Required | Description                                                                 | Example                        |
-|-------------------|:--------:|-----------------------------------------------------------------------------|--------------------------------|
-| `label`           |    No    | Override the column header.                                                 | `label=Full Name`              |
-| `edit_link`       |    No    | Make the value a link to the user edit page.                                | `edit_link=1`                  |
-| `tooltip_field`   |    No    | Field name for tooltip content.                                             | `tooltip_field=created`        |
-| `tooltip_prefix`  |    No    | Text displayed before the tooltip value.                                    | `tooltip_prefix=Joined:`       |
-| `tooltip_format`  |    No    | Apply formatting, e.g., `date(d.m.Y)`.                                      | `tooltip_format=date(Y)`       |
-| `separator`       |    No    | Separator for multiple values (if the field is an array).                   | `separator=, `                 |
-| `format_raw`      |    No    | Custom labels for Checkbox values (`no|yes`).                               | `format_raw=Disabled|Enabled`  |
-
-#### **FieldtypePage**
-
-| Parameter         | Required | Description                                                                 | Example                        |
-|-------------------|:--------:|-----------------------------------------------------------------------------|--------------------------------|
-| `resolve_page`    |   Yes    | Specify which field of the referenced Page to display.                      | `resolve_page=title`           |
-| `as_link`         |    No    | Display the value as a link to the referenced Page.                         | `as_link=1`                    |
-| `tooltip_field`   |    No    | Field on the Page to show in a hover tooltip.                               | `tooltip_field=dateEvent`      |
-| `tooltip_prefix`  |    No    | Prefix text for the tooltip.                                                | `tooltip_prefix=Date:`         |
-| `tooltip_format`  |    No    | Format helper for tooltip content.                                          | `tooltip_format=date(d.m.Y)`   |
-| `separator`       |    No    | Separator between multiple pages.                                           | `separator=, `                 |
-
-#### **FieldtypeTable**
-
-| Parameter         | Required | Description                                                                 | Example                        |
-|-------------------|:--------:|-----------------------------------------------------------------------------|--------------------------------|
-| `table_column`    |   Yes    | Name of the column in the TableField.                                       | `table_column=product_id`      |
-| `resolve_page`    |    No    | If the column holds Page IDs, specify which Page field to display.          | `resolve_page=title`           |
-| `as_link`         |    No    | Make the resolved Page value a link.                                       | `as_link=1`                    |
-| `separator`       |    No    | Separator for multiple resolved values.                                    | `separator= | `                |
-| `tooltip_field`   |    No    | Column for tooltip content.                                                | `tooltip_field=product_date`   |
-| `tooltip_prefix`  |    No    | Prefix text for the tooltip.                                                | `tooltip_prefix=Purchased:`    |
-| `tooltip_format`  |    No    | Format helper for the tooltip value.                                        | `tooltip_format=date(d.m.Y)`   |
-| `format_raw`      |    No    | Re-format the raw value (e.g., `d.m.Y`).                                    | `format_raw=d.m.Y`             |
+```
+key=value
+key=option1|option2
+```
 
 ---
 
-### Virtual Fields
+## 🛠️ Configuration Parameters
 
-Virtual fields are custom columns that display derived or aggregate values. Use the prefix `virtual__` to define these fields.
+The following configuration parameters are available for all field types:
 
-| Parameter         | Required | Description                                                                 | Example                        |
-|-------------------|:--------:|-----------------------------------------------------------------------------|--------------------------------|
-| `selector`        |   Yes    | Expression for the virtual field (`sum()`, `avg()`, `min()`, `count()`).    | `selector=sum(products.price)` |
-| `label`           |    No    | Override the column header.                                                 | `label=Total Revenue`          |
-| `format`          |    No    | Apply formatting (`int`, `number`, `currency`, `percent`, `custom=...`).    | `format=currency`              |
-| `tooltip_field`   |    No    | Use another field or expression as a tooltip.                               | `tooltip_field=count(products)`|
-| `tooltip_prefix`  |    No    | Prefix text for a tooltip.                                                  | `tooltip_prefix=Count:`        |
-| `tooltip_format`  |    No    | Format helper for tooltip value.                                            | `tooltip_format=custom=%d`     |
+| **Parameter**    | **Fieldtype(s)**      | **Mandatory** | **Options**                    |
+| ---------------- | --------------------- | ------------- | ------------------------------ |
+| `label`          | All                   | No            | String                         |
+| `textAlign`      | All                   | No            | left, center, right            |
+| `separator`      | All                   | No            | String                     |
+| `format`         | All                   | No            | See Formatting Options         |
+| `tooltip_field`  | All                   | No            | Fieldname                      |
+| `tooltip_prefix` | All                   | No            | String                         |
+| `tooltip_format` | All                   | No            | See Formatting Options         |
+| `edit_link`      | Primitive             | No            | Bool (1, 0)                    |
+| `table_column`   | TableField            | Yes           | Column name                |
+| `resolve_page`   | TableField, PageField | No            | Fieldname                      |
+| `as_link`        | TableField, PageField | No            | Bool (1, 0)                    |
+| `selector`       | Virtual               | Yes           | See Selector Options           |
+
+
+---
+
+## 🛠️ Formatting Options
+
+Formatting parameters can be applied to field values and tooltips. The available formats are as follows:
+
+| **Format**              | **Description**                         | **Example**                                           |
+| ----------------------- | --------------------------------------- | ----------------------------------------------------- |
+| `int`                   | Rounds to nearest integer               | `123.45` → `123`                                      |
+| `number`                | Formats as a number with 2 decimals     | `1234.56` → `1.234,56`                                |
+| `currency(CODE:LOCALE)` | Currency formatting with locale support | `1234.56` → `currency(EUR:de_AT)` → `€ 1.234,56`      |
+| `date(FORMAT)`          | Date formatting                         | `1652875200` → `date(d.m.Y H:i)` → `18.05.2023 12:00` |
+| `map(KEY:VALUE,...)`    | Value mapping for specific values       | `map(0:Inactive,1:Active)`                            |
+| `custom(SPRINTF)`       | Custom `sprintf()` format               | `custom(%0.2f kg)` → `123,46 kg`                      |
 
 ---
 
-## 🎨 Rendering and Filtering Options
+## 🛠️ Selector Options
 
-The module supports advanced rendering and filtering features:
+The `selector` parameter is used primarily in virtual fields to perform calculations or data manipulations. The following selector options are available:
 
-1. **Role Filtering**: Show only users with specific roles (`user_roles`).
-2. **Sorting**: Sort by any configured field, including virtual fields.
-3. **Pagination**: Display a configurable number of rows per page (`entries_per_page`).
-4. **Custom Cell Rendering**: Render fields as links, tooltips, or formatted text.
+| **Selector Option**    | **Description**                 | **Example**                  |
+| ---------------------- | ------------------------------- | -----------------------------|
+| `sum(...)`             | Sums the values of a field      | `sum(orders.total)`          |
+| `avg(...)`             | Averages the values of a field  | `avg(products.price)`        |
+| `min(...)`             | Returns the minimum value       | `min(scores.value)`          |
+| `max(...)`             | Returns the maximum value       | `max(sales.amount)`          |
+| `count(...)`           | Counts the number of items      | `count(products.product_id)` |
+| `join(..., SEPARATOR)` | Joins values with a separator   | `join(tags.name, ', ')`      |
+| `FIELDNAME`            | Accesses a specific field value | `status`, `email`            |
+
+### ✅ Selector Parameter Syntax
+
+The `selector` parameter defines the data extraction logic for virtual fields and supports various functions. The syntax follows one of two structures:
+
+#### **1. Two-Segment Path (Page Fields)**
+
+For Page or PageArray fields, the syntax follows the format:
+```
+selector=FIELDNAME.SUBFIELD
+```
+- `FIELDNAME` – The field referencing Page(s).
+- `SUBFIELD` – The property or field to extract.
+
+**Examples:**
+- `selector=count(roles.id)` – Counts the number of roles assigned to the user.
+- `selector=join(languages.title, ', ')` – Joins the titles of the user’s languages.
 
 ---
+
+#### **2. Three-Segment Path (Table Fields)**
+
+For FieldtypeTable fields, the syntax follows the format:
+```
+selector=TABLEFIELD.IDFIELD.VALUEFIELD
+``
+- `TABLEFIELD` – The FieldtypeTable field in the user template.
+- `IDFIELD` – The column in the table that references a Page ID.
+- `VALUEFIELD` – The field in the referenced Page from which the data is extracted.
+
+**Examples:**
+- `selector=sum(products.product_id.price)` – Sums the `price` of all products a user has purchased.
+- `selector=count(products.product_id)` – Counts the number of products.
+- `selector=join(products.product_id.title, ', ')` – Joins the product titles.
+
+---
+
+### 🔥 **Why the 3-Segment Structure?**
+
+- The 3-segment structure is necessary to maintain the link between a **table row and its referenced Page object**.
+- It allows for accessing Page properties (`price`, `title`) based on a reference field (`product_id`).
+
+---
+
+### 🚀 **Summary:**
+- **2-segment structure** is for direct Page or PageArray fields.
+- **3-segment structure** is for complex data relationships in FieldtypeTable fields, maintaining links between rows and referenced Pages.
+---
+
 
 ## 📝 Examples
 
-## Example 1: Displaying a TableField with Tooltips
-
-This configuration defines a column that displays purchased products with a tooltip showing the purchase date.
+**1. Displaying a TableField of purchases, linked to the product page, with Tooltips that show the date of the purchase:**
 
 ```
-label=Products Bought 
-table_column=product_id 
-resolve_page=title 
-as_link=1 
-tooltip_field=product_date 
-tooltip_prefix=Purchased: 
+label=Products Bought
+table_column=product_id
+resolve_page=title
+as_link=1
+tooltip_field=purchase_date
+tooltip_prefix=Purchased:
 tooltip_format=date(d.m.Y H:i)
 ```
 
+**2. Virtual Field for showing the Sum of all products purchased per user:**
 
-### Explanation of Parameters
-
-| Parameter        | Description                                                                      | Example                  |
-|------------------|----------------------------------------------------------------------------------|--------------------------|
-| `label`          | The column header label.                                                        | `Products Bought`        |
-| `table_column`   | The name of the column in the **FieldtypeTable** field.                         | `product_id`             |
-| `resolve_page`   | Specifies which field from the referenced Page to display.                     | `title`                  |
-| `as_link`        | Renders the value as a clickable link to the referenced Page.                  | `1` (enabled)            |
-| `tooltip_field`  | Specifies the column to use for the tooltip content.                           | `product_date`           |
-| `tooltip_prefix` | Adds a prefix to the tooltip text.                                              | `Purchased:`             |
-| `tooltip_format` | Formats the tooltip content using a date helper function.                      | `date(d.m.Y H:i)`        |
-
-### Result in the Admin Interface
-
-When applied, this configuration will:
-
-1. Display a column labeled **"Products Bought"**.
-2. Show the product titles (resolved from the Page field `title`).
-3. Render the product titles as clickable links leading to the detailed Page.
-4. Add a tooltip to each entry that displays the purchase date in the format `day.month.year hour:minute`, prefixed with the text **"Purchased:"**.
-
-### Example Table Output
-
-| Products Bought       |
-|------------------------|
-| [Product A](#productA) |
-| [Product B](#productB) |
-
-Hovering over the entries will display tooltips such as:
-
-- **Purchased: 25.12.2024 14:30**
-- **Purchased: 01.01.2025 10:15**
-
-
-This example demonstrates how to leverage the **ProcessUserDataTable** module to create an intuitive and informative table column in the ProcessWire backend.
-
----
-
-## Example 2: Virtual Field for Aggregate Value
-
-The **ProcessUserDataTable** module allows you to define virtual fields for calculated or aggregate values using the `virtual__` prefix. This example demonstrates how to configure a virtual field to display the total revenue from products using the `sum()` function.
-
-### Configuration
-
-Add the following configuration in the **Parameters** textarea for the virtual field:
 ```
-selector=sum(products.price) 
-label=Total Revenue 
-format=currency
+selector=sum(products.product_id.price)
+label=Total Sales
+format=currency(EUR:de_AT)
 ```
 
-### Explanation of Parameters
+**3. Checkbox Field with Custom Labels:**
 
-| Parameter   | Required | Description                                                                 | Example                        |
-|-------------|:--------:|-----------------------------------------------------------------------------|--------------------------------|
-| `selector`  |   Yes    | The expression to calculate the aggregate value. In this case, `sum()` is used to calculate the total of the `products.price` field. | `sum(products.price)`          |
-| `label`     |    No    | The column header label to display in the table.                            | `Total Revenue`                |
-| `format`    |    No    | Defines how the value is formatted. Supports `int`, `number`, `currency`, `percent`, or a custom format. | `currency`                     |
-
-### Supported `selector` Functions
-- **`sum()`**: Calculates the total sum of the specified field.
-- **`avg()`**: Calculates the average value of the specified field.
-- **`min()`**: Finds the minimum value in the field.
-- **`max()`**: Finds the maximum value in the field.
-- **`count()`**: Counts the number of entries in the field.
-- **`join(..., ', ')`**: Joins multiple values together with a specified separator.
-
-### Supported `format` Options
-- **`int`**: Rounds the value to the nearest integer.
-- **`number`**: Formats the value as a number with two decimal places.
-- **`currency`**: Formats the value as a currency (e.g., `€ 1,234.56`).
-- **`percent`**: Formats the value as a percentage.
-- **`custom=...`**: Apply a custom format string using `sprintf()` syntax.
-
-### Result in the Admin Interface
-
-When applied, this configuration will:
-
-1. Add a column labeled **"Total Revenue"** to the table.
-2. Calculate the total sum of all `price` values in the `products` field.
-3. Format the value as currency (e.g., `€ 1,234.56`).
-
-### Example Table Output
-
-| User          | Total Revenue |
-|---------------|---------------|
-| John Doe      | € 1,234.56    |
-| Jane Smith    | € 2,345.67    |
-
-This configuration allows you to create insightful aggregate columns in your table, enhancing the usefulness of the **ProcessUserDataTable** module.
-
----
-
-## Example 3: Checkbox with Custom Labels
-
-The **ProcessUserDataTable** module allows you to customize how checkbox fields are displayed in the table. You can define specific labels for the `true` (checked) and `false` (unchecked) states using the `format_raw` parameter.
-
-### Configuration
-
-To customize the labels for a checkbox field, use the following configuration in the **Parameters** textarea:
 ```
-label=Status 
-format_raw=Inactive|Active
+label=Status
+format=map(0:Inactive,1:Active)
 ```
-
-### Explanation of Parameters
-
-| Parameter   | Required | Description                                                                 | Example                  |
-|-------------|:--------:|-----------------------------------------------------------------------------|--------------------------|
-| `label`     |    No    | The column header label to display in the table.                            | `Status`                |
-| `format_raw`|    No    | Defines custom labels for the unchecked (`false`) and checked (`true`) states. Use a pipe (`|`) to separate the two labels. | `Inactive|Active`        |
-
-### How `format_raw` Works
-- The first value (before the pipe `|`) is displayed when the checkbox is **unchecked** (`false`).
-- The second value (after the pipe `|`) is displayed when the checkbox is **checked** (`true`).
-
-If `format_raw` is not specified, the module will use default labels:
-- **Unchecked**: Displays as `Disabled`.
-- **Checked**: Displays as `Enabled`.
-
-### Result in the Admin Interface
-
-When applied, this configuration will:
-
-1. Add a column labeled **"Status"** to the table.
-2. Display the label **"Inactive"** for unchecked checkboxes.
-3. Display the label **"Active"** for checked checkboxes.
-
-### Example Table Output
-
-| User          | Status       |
-|---------------|--------------|
-| John Doe      | Active       |
-| Jane Smith    | Inactive     |
-
-This configuration allows you to provide user-friendly, meaningful labels for checkbox fields in your table, enhancing clarity and usability.
-
 
 ---
 
 ## ❓ FAQ
 
-### Q: Can I display fields from other templates?
-A: The module currently supports only fields directly defined in the **User template**.
+* **How do I format tooltip values?**
 
-### Q: How do I add a virtual field?
-A: Add the field name with the prefix `virtual__` (e.g., `virtual__sum`) in the **Additional fields** setting.
+  * Tooltip values now use the same `format` syntax as field values, processed through the `formatValue()` method.
 
-### Q: Can I sort by virtual fields?
-A: Yes, sorting by virtual fields is supported using the `selector` parameter.
+* **Can I use multiple mappings?**
 
-### Q: Can I use fields from related templates (e.g., Pages referenced in a User field)?
-**A:** Yes, you can use `resolve_page` to display fields from related Pages (e.g., `resolve_page=title` for a Page reference in a user field). For nested structures, you can also use virtual fields and selector expressions.
+  * Yes. Use the `map()` syntax for clear key-value mappings.
 
-### Q: What happens if I configure a field that doesn't exist in the User template?
-**A:** The module will skip over fields that do not exist in the User template or are incorrectly configured. No errors will be displayed, but the column will be empty in the output.
+* **How do I resolve Page references?**
 
-### Q: How can I customize the tooltip text for a field?
-**A:** You can specify a `tooltip_field` (the field to use for tooltip content) and optionally add `tooltip_prefix` or format it using `tooltip_format`. For example: 
-```
-tooltip_field=created 
-tooltip_prefix=Joined: 
-tooltip_format=date(d.m.Y)
-```
+  * Use the `resolve_page` parameter to specify a subfield of the referenced Page.
 
-### Q: Can I configure multiple roles for filtering?
-**A:** Yes, you can specify multiple roles using `user_roles` and define whether users need **at least one role** (`or`) or **all roles exactly** (`and`) using `roles_mode`.
+* **What happens if a format is not recognized?**
 
-### Q: Can I display fields that reference multiple Pages (PageArrays)?
-**A:** Yes, the module supports PageArray fields. You can use `resolve_page` to display a specific subfield (e.g., `title`) and separate multiple values using `separator`.
+  * The value will be returned as-is, without formatting.
 
-### Q: How do I create a calculated field using multiple fields?
-**A:** Use the virtual field feature with a `selector` expression. For example, to calculate the total price of products:
-```
-selector=sum(products.price)
-```
-### Q: What happens if I try to sort by a virtual field?
-**A:** Sorting by virtual fields is supported. Ensure you configure the virtual field with a valid `selector` and specify it in the `sort_field` setting.
+* **Can I customize currency symbols?**
 
-### Q: Can I display a checkbox field as custom labels like "Active" or "Inactive"?
-**A:** Yes, by using `format_raw`. For example:
-```
-format_raw=Pending|Cleared
-```
-
-### Q: Is it possible to export the table data?
-**A:** The module does not natively support exporting data. However, you can use ProcessWire's API or other tools to generate CSV or JSON exports.
-
-### Q: How do I handle fields with large amounts of text (e.g., multi-line text fields)?
-**A:** For large text fields, you can truncate the content using custom formatting or use tooltips to display the full content on hover.
-
-### Q: Can I hide the table for specific user roles?
-**A:** Yes, you can control access to the module via ProcessWire's permissions system. Ensure the appropriate roles have or lack the `user-admin` permission.
-
-### Q: What should I do if I encounter performance issues with large datasets?
-**A:** Reduce the number of rows displayed per page (`entries_per_page`) and optimize the fields being queried (e.g., avoid complex calculations in virtual fields).
-
----
-
-This README provides a comprehensive guide to configuring and using the **ProcessUserDataTable** module. If you have further questions or need assistance, feel free to contact the author or check the [repository documentation](https://github.com/frameless-at/ProcessUserDataTable).
+  * Yes, the `currency()` format allows full locale support, e.g., `currency(EUR:de_AT)`.
