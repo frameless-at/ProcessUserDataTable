@@ -262,7 +262,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
   
 	  // Modal Structure
 	  $modalContent = "<div id='{$modalId}' class='uk-modal' uk-modal>
-						  <div class='uk-modal-dialog uk-modal-body'>
+						  <div class='uk-modal-dialog uk-modal-body uk-width-1-1@s uk-width-3-4@m uk-width-1-2@xl uk-width-3-4'>
 							  <button class='uk-modal-close-default' type='button' uk-close></button>
 							  <h2 class='uk-modal-title'>{$modalLabel}</h2>
 							  <table class='uk-table uk-table-divider'>
@@ -345,35 +345,48 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	  return $headersHtml;
   }
   
-  /**
-   * Generates the table content for the modal.
-   *
-   * @param TableRows $tableRows - The table rows.
-   * @param string $resolvePageColumn - Column name to resolve as page link.
-   * @param string $resolveField - Field to display for resolved page.
-   * @return string - The generated content HTML.
-   */
+
+/**
+	* Generates the table content for the modal.
+	*
+	* @param TableRows $tableRows - The table rows.
+	* @param string $resolvePageColumn - Column name to resolve as page link.
+	* @param string $resolveField - Field to display for resolved page.
+	* @return string - The generated content HTML.
+	*/
   protected function generateModalTableContent($tableRows, string $resolvePageColumn, string $resolveField): string {
-	  $content = '';
+	   $content = '';
+   
+	   foreach ($tableRows as $row) {
+		   $rowArray = $row->getArray();
+		   $content .= "<tr>";
+   
+		   $dataColumns = array_slice($rowArray, 1);
+   
+		   foreach ($dataColumns as $key => $value) {
+   
+			   // Check if value is a numeric timestamp
+			   if (is_numeric($value) && (int)$value > 1000000000) {
+				   $value = date('d.m.Y H:i', (int)$value);
+			   }
+   
+			   // Resolve page link
+			   if ($key === $resolvePageColumn && $resolveField && is_numeric($value)) {
+				   $page = $this->wire('pages')->get((int) $value);
+				   if ($page->id) {
+					   $value = "<a href='{$page->url}' target='_blank'>{$page->get($resolveField)}</a>";
+				   }
+			   }
+   
+			   $content .= "<td>{$value}</td>";
+		   }
+   
+		   $content .= "</tr>";
+	   }
+   
+	   return $content;
+   }
   
-	  foreach ($tableRows as $row) {
-		  $rowArray = $row->getArray();
-		  $content .= "<tr>";
-  
-		  $dataColumns = array_slice($rowArray, 1);
-		  foreach ($dataColumns as $key => $value) {
-			  if ($key === $resolvePageColumn && $resolveField) {
-				  $page = $this->wire('pages')->get((int) $value);
-				  $value = $page->id ? "<a href='{$page->url}' target='_blank'>{$page->get($resolveField)}</a>" : 'Unknown';
-			  }
-			  $content .= "<td>{$value}</td>";
-		  }
-  
-		  $content .= "</tr>";
-	  }
-  
-	  return $content;
-  }
 
 
 	/**
@@ -1099,52 +1112,6 @@ public static function getModuleConfigInputfields(array $data): InputfieldWrappe
  * @param string $fieldName The name of the field.
  * @return string The default configuration for this field.
  */
-/* private static function getDefaultConfigForField(string $fieldName): string {
-	 if (str_starts_with($fieldName, 'virtual__')) {
-		 return "label=Virtual Field (optional)\n"
-			 . "textAlign=left\n"
-			 . "format=int|number|currency|percent|custom=...\n"
-			 . "locale=en_US (optional)\n" // Added locale
-			 . "separator=, (optional)\n"
-			 . "tooltip_field=... (optional)\n"
-			 . "tooltip_prefix=... (optional)";
-	 }
- 
-	 $field = wire('fields')->get($fieldName);
-	 if ($field instanceof Field && strpos(get_class($field->type), 'FieldtypeTable') !== false) {
-		 return "label=Table Field (optional)\n"
-			 . "table_column=... (**Required**)\n"
-			 . "textAlign=left\n"
-			 . "resolve_page=... (optional)\n"
-			 . "as_link=1 (optional)\n"
-			 . "separator=, (optional)\n"
-			 . "tooltip_field=... (optional)\n"
-			 . "tooltip_prefix=... (optional)\n"
-			 . "tooltip_format=date(format) (optional)";
-	 }
- 
-	 if ($field instanceof Field && strpos(get_class($field->type), 'FieldtypePage') !== false) {
-		 return "label=Page Field (optional)\n"
-			 . "resolve_page=... (**Required**)\n"
-			 . "textAlign=left\n"
-			 . "as_link=1 (optional)\n"
-			 . "separator=, (optional)\n"
-			 . "tooltip_field=... (optional)\n"
-			 . "tooltip_prefix=... (optional)\n"
-			 . "tooltip_format=date(format) (optional)";
-	 }
- 
-	 // Default for primitive fields
-	 return "label=Primitive Field (optional)\n"
-		 . "textAlign=left\n"
-		 . "format=int|number|currency|percent|custom=...\n" // Added format
-		 . "locale=en_US (optional)\n" // Added locale
-		 . "edit_link=1 (optional)\n"
-		 . "separator=, (optional)\n"
-		 . "tooltip_field=... (optional)\n"
-		 . "tooltip_prefix=... (optional)\n"
-		 . "tooltip_format=date(format)|map(1=No,2=Yes) (optional)";
- } */
 
 private static function getDefaultConfigForField(string $fieldName): string {
 	if (str_starts_with($fieldName, 'virtual__')) {
