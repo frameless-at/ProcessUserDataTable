@@ -7,7 +7,7 @@ The **ProcessUserDataTable** module provides a highly configurable table of user
 
 ---
 
-## Table of Contents
+## 📖 Table of Contents
 
 1. [Overview](#overview)
 2. [Installation](#installation)
@@ -20,7 +20,7 @@ The **ProcessUserDataTable** module provides a highly configurable table of user
 
 ---
 
-## Overview
+## 🧐 Overview
 
 The **ProcessUserDataTable** module provides advanced data table functionality for user data, including:
 
@@ -33,7 +33,7 @@ The **ProcessUserDataTable** module provides advanced data table functionality f
 
 ---
 
-## Installation
+## 🛠️ Installation
 
 1. **Download the Module**:
 
@@ -51,7 +51,7 @@ The **ProcessUserDataTable** module provides advanced data table functionality f
 
 ---
 
-## Configuration
+## ⚙️ Configuration
 
 Configuration is divided into:
 
@@ -60,7 +60,7 @@ Configuration is divided into:
 
 ---
 
-## Field Configuration Syntax
+## 📝 Field Configuration Syntax
 
 Field configurations follow a strict key-value format, using the syntax:
 
@@ -71,29 +71,102 @@ key=option1|option2
 
 ---
 
-## Configuration Parameters
+## 🛠️ Configuration Parameters
 
-The following configuration parameters are available for all field types:
+The following configuration parameters are available:
 
 | **Parameter**    | **Fieldtype(s)**      | **Mandatory** | **Options**                    |
 | ---------------- | --------------------- | ------------- | ------------------------------ |
 | `label`          | All                   | No            | String                         |
 | `textAlign`      | All                   | No            | left, center, right            |
-| `separator`      | All                   | No            | String                     |
+| `separator`      | All                   | No            | String                         |
 | `format`         | All                   | No            | See Formatting Options         |
 | `tooltip_field`  | All                   | No            | Fieldname                      |
 | `tooltip_prefix` | All                   | No            | String                         |
 | `tooltip_format` | All                   | No            | See Formatting Options         |
 | `edit_link`      | Primitive             | No            | Bool (1, 0)                    |
-| `table_column`   | TableField            | Yes           | Column name                |
+| `table_column`   | TableField            | Yes           | Column name                    |
+| `modal`          | TableField            | No            | Bool (1, 0)                    |
+| `modal_sort`     | TableField            | No            | Column name                    |
+| `modal_sortdir`  | TableField            | No            | asc, desc                      |
 | `resolve_page`   | TableField, PageField | No            | Fieldname                      |
 | `as_link`        | TableField, PageField | No            | Bool (1, 0)                    |
 | `selector`       | Virtual               | Yes           | See Selector Options           |
 
+---
+
+### Modal Configuration for TableFields
+
+The module now supports modal displays for `FieldtypeTable` fields. This feature allows you to display data from a table field in a modal window with sorting, resolved page links, and custom labels.
+
+### Example Output
+
+Assuming the following data in the `visits` table field:
+
+| ID  | visit_id  | visit_count |
+|-----|-----------|-------------|
+| 1   | 101       | 5           |
+| 2   | 102       | 3           |
+| 3   | 103       | 8           |
+
+The modal output will look like this:
+
+| Pages            | Visits |
+|------------------|--------|
+| [Home](https://example.com/home) | 8      |
+| [Contact](https://example.com/contact) | 5      |
+| [About](https://example.com/about) | 3      |
+
+- The `visit_id` column is resolved to the `title` field of the target page.
+- The `visit_count` column is sorted in descending order.
 
 ---
 
-## Formatting Options
+### Implementation Details
+
+- **Modal ID Generation:**  
+  Each modal is assigned a unique ID to avoid conflicts when multiple modals are rendered simultaneously.
+
+- **Column Labels Handling:**  
+  The column labels are fetched directly from the `FieldtypeTable` configuration using the `maxCols` setting. The structure is dynamically adapted to handle any number of columns.
+
+- **Sorting Logic:**  
+  Sorting is applied using the `modal_sort` and `modal_sortdir` parameters. The sorting is applied before generating the table content, ensuring that the data is rendered in the correct order.
+
+- **Resolved Page Links:**  
+  When `resolve_page` is configured, the specified column will be treated as a page reference, and its value will be rendered as a clickable link using the `resolve_page` field.
+
+- **Dynamic Table Content:**  
+  The modal content is generated dynamically based on the table field data. Each row is iterated, and its content is rendered as defined by the column configuration.
+
+- **Error Handling:**  
+  If the `resolve_page` column points to a non-existent page, the output will display `"Unknown"` instead of generating a broken link.
+
+---
+
+### Example Usage Scenario
+
+**User Activity Tracking:**  
+If a `FieldtypeTable` field is used to log user activity with columns like `page_id`, `visit_count`, and `visit_date`, the modal can be configured to:
+
+- Display the `page_id` as a clickable link to the page title.
+- Sort the rows by `visit_count` in descending order to show the most visited pages at the top.
+- Label the columns as `"Page Title"`, `"Visits"`, and `"Last Visit"` for clarity.
+
+Example configuration:
+
+```
+label: User Activity
+modal: 1
+modal_sort: visit_count
+modal_sortdir: desc
+table_column: page_id
+resolve_page: title
+```
+
+---
+
+## 🛠️ Formatting Options
 
 Formatting parameters can be applied to field values and tooltips. The available formats are as follows:
 
@@ -108,7 +181,7 @@ Formatting parameters can be applied to field values and tooltips. The available
 
 ---
 
-## Selector Options
+## 🛠️ Selector Options
 
 The `selector` parameter is used primarily in virtual fields to perform calculations or data manipulations. The following selector options are available:
 
@@ -122,7 +195,7 @@ The `selector` parameter is used primarily in virtual fields to perform calculat
 | `join(..., SEPARATOR)` | Joins values with a separator   | `join(tags.name, ', ')`      |
 | `FIELDNAME`            | Accesses a specific field value | `status`, `email`            |
 
-### Selector Parameter Syntax
+### ✅ Selector Parameter Syntax
 
 The `selector` parameter defines the data extraction logic for virtual fields and supports various functions. The syntax follows one of two structures:
 
@@ -158,21 +231,21 @@ selector=TABLEFIELD.IDFIELD.VALUEFIELD
 
 ---
 
-### **Why the 3-Segment Structure?**
+### 🔥 **Why the 3-Segment Structure?**
 
 - The 3-segment structure is necessary to maintain the link between a **table row and its referenced Page object**.
 - It allows for accessing Page properties (`price`, `title`) based on a reference field (`product_id`).
 
 ---
 
-### **Summary:**
+### 🚀 **Summary:**
 - **2-segment structure** is for direct Page or PageArray fields.
 - **3-segment structure** is for complex data relationships in FieldtypeTable fields, maintaining links between rows and referenced Pages.
 
 ---
 
 
-## Examples
+## 📝 Examples
 
 **1. Displaying a TableField of purchases, linked to the product page, with Tooltips that show the date of the purchase:**
 
@@ -203,27 +276,23 @@ format=map(0:Inactive,1:Active)
 
 ---
 
-## FAQ
+## ❓ FAQ
 
 * **How do I format tooltip values?**
 
   * Tooltip values now use the same `format` syntax as field values, processed through the `formatValue()` method.
-  
 
 * **Can I use multiple mappings?**
 
   * Yes. Use the `map()` syntax for clear key-value mappings.
-  
 
 * **How do I resolve Page references?**
 
   * Use the `resolve_page` parameter to specify a subfield of the referenced Page.
-  
 
 * **What happens if a format is not recognized?**
 
   * The value will be returned as-is, without formatting.
-  
 
 * **Can I customize currency symbols?**
 

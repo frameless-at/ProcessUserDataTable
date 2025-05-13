@@ -10,7 +10,7 @@
  * @author frameless Media
  * @link   https://frameless.at
  * @license GNU/GPL v2
- * @version 2.3.8
+ * @version 2.4.0
  */
 
 class ProcessUserDataTable extends Process implements Module, ConfigurableModule {
@@ -23,7 +23,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	public static function getModuleInfo(): array {
 		return [
 			'title' => 'User Data Table',
-			'version' => '2.3.8',
+			'version' => '2.4.0',
 			'summary' => 'Displays a configurable table of user fields in the admin interface.',
 			'author' => 'frameless Media',
 			'icon' => 'users',
@@ -61,62 +61,41 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 		return $this->renderTable($data);
 	}
 
-/**
-	 * Render a table column (header or data cell) with optional text alignment and other configuration.
+			 
+	/**
+	 * Parse configuration parameters from a multiline text string.
 	 *
-	 * This method handles both the rendering of header cells (<th>) and data cells (<td>) for the table.
-	 * It applies any specified text alignment (left, center, right) using UIKit classes and supports
-	 * dynamic content generation for both headers (including sorting links) and data cells.
+	 * Processes key-value pairs from a string where each line contains one parameter.
+	 * Ignores lines marked as optional (e.g., "key=value (optional)").
 	 *
-	 * @param Page|NullPage|null $user The user object for the current row (null when rendering a header).
-	 * @param array $col The column configuration array, including parameters like 'user_field' and 'parameters'.
-	 * @param bool $isHeader Whether the column being rendered is a header (<th>) or a data cell (<td>).
-	 * @return string The rendered HTML string for the column (<th> or <td>).
+	 * Example input:
+	 *  key1=value1
+	 *  key2=value2 (optional)
+	 *
+	 * @param string $text The raw parameter string with one key=value pair per line
+	 * @return array An associative array of parsed parameters
 	 */
-	 protected function renderColumn($user, $col, $isHeader = false): string {
-		$field = $col['user_field'] ?? '';
-		$params = $this->parseParams($col['parameters'] ?? '');
 	
-		// Determine text alignment class
-		$textAlign = $params['textAlign'] ?? 'left'; // Default to 'left'
-		$alignClass = match (strtolower($textAlign)) {
-			'center' => 'uk-text-center',
-			'right' => 'uk-text-right',
-			default => 'uk-text-left',
-		};
+	protected function parseParams(string $text): array {
+		$lines = explode("\n", $text); // Split the input into lines
+		$params = [];
+		
+		foreach ($lines as $line) {
+			// Match key-value pairs with a simple syntax
+			if (preg_match('/^([a-zA-Z0-9_]+)=(.+)$/', $line, $matches)) {
+				$key = trim($matches[1]);
+				$val = trim($matches[2]);
 	
-		if ($isHeader) {
-			// Render header cell (<th>)
-			$label = $params['label'] ?? null;
-			if (!$label) {
-				$fieldData = wire('fields')->get($field);
-				$label = $fieldData instanceof Field ? $fieldData->label : $field;
+				// Skip parameters with "(optional)" in their value
+				if (str_ends_with($val, '(optional)')) {
+					continue;
+				}
+				$params[$key] = $val; // Add the key-value pair
 			}
-	
-			$sortField = $this->input->get('sort');
-			$sortDir = strtolower($this->input->get('dir') ?? 'asc');
-			$newDir = ($sortField === $field && $sortDir === 'asc') ? 'desc' : 'asc';
-	
-			$query = http_build_query([
-				'sort' => $field,
-				'dir' => $newDir,
-				'start' => 0,
-			]);
-			$url = $this->page->url . '?' . $query;
-	
-			$sortIcon = '';
-			if ($sortField === $field) {
-				$icon = $sortDir === 'asc' ? 'chevron-up' : 'chevron-down';
-				$sortIcon = "&nbsp;<span uk-icon=\"icon: {$icon}; ratio: 1\" style=\"vertical-align: 2px;\"></span>";
-			}
-	
-			return "<th class='{$alignClass}'><a href='{$url}'>{$this->sanitizer->entities($label)}{$sortIcon}</a></th>";
-		} else {
-			// Render data cell (<td>)
-			$cell = $this->renderCell($user, $field, $params);
-			return "<td class='{$alignClass}'>{$cell}</td>";
 		}
+		return $params; // Return all parsed parameters
 	}
+
 	
 	/**
 	 * Centralized method to format values.
@@ -242,7 +221,161 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 		// Return the tooltip-specific HTML
 		return " data-uk-tooltip title=\"{$sanitizedTooltip}\"";
 	}
-	
+
+  
+  /**
+   * Renders a modal link with entry count and modal content.
+   *
+   * @param TableRows|null $tableRows - The table rows data.
+   * @param array $params - Configuration parameters.
+   * @param string $fieldName - The field name.
+   * @return string - The rendered modal link and content or an empty string.
+   */
+  protected function renderModal($tableRows, array $params, string $fieldName): string {
+	  $modalEnabled = isset($params['modal']) && $params['modal'] == '1';
+	  if (!$modalEnabled || !$tableRows) return '';
+  
+	  $modalSort = $params['modal_sort'] ?? '';
+	  $modalSortDir = strtolower($params['modal_sortdir'] ?? 'asc');
+	  $resolvePageColumn = $params['table_column'] ?? '';
+	  $resolveField = $params['resolve_page'] ?? '';
+	  $modalLabel = $params['label'] ?? 'Details';
+  
+	  $validSortDir = in_array($modalSortDir, ['asc', 'desc']) ? $modalSortDir : 'asc';
+  
+	  // Generate unique modal ID
+	  $modalId = 'modal-' . uniqid();
+	  $entryCount = count($tableRows);
+  
+	  if ($entryCount === 0) return '';
+  
+	  $columnLabels = $this->getModalColumnLabels($fieldName);
+  
+	  // Sorting Logic
+	  $this->applyModalSorting($tableRows, $modalSort, $validSortDir);
+  
+	  // Generate Modal Content
+	  $tableContent = $this->generateModalTableContent($tableRows, $resolvePageColumn, $resolveField);
+  
+	  // Modal Link
+	  $link = "<a href='#{$modalId}' uk-toggle>{$entryCount}</a>";
+  
+	  // Modal Structure
+	  $modalContent = "<div id='{$modalId}' class='uk-modal' uk-modal>
+						  <div class='uk-modal-dialog uk-modal-body'>
+							  <button class='uk-modal-close-default' type='button' uk-close></button>
+							  <h2 class='uk-modal-title'>{$modalLabel}</h2>
+							  <table class='uk-table uk-table-divider'>
+								  <thead>
+									  <tr>{$this->generateModalTableHeaders($columnLabels, $tableRows)}</tr>
+								  </thead>
+								  <tbody>{$tableContent}</tbody>
+							  </table>
+						  </div>
+					  </div>";
+  
+	  return $link . $modalContent;
+  }
+  
+  /**
+   * Extracts and returns column labels for a FieldtypeTable field.
+   *
+   * @param string $fieldName - The field name.
+   * @return array - Array of column labels.
+   */
+  protected function getModalColumnLabels(string $fieldName): array {
+	  $columnLabels = [];
+	  $field = $this->wire('fields')->get($fieldName);
+  
+	  if ($field && isset($field->data['maxCols'])) {
+		  $data = $field->data;
+		  $maxCols = (int) $data['maxCols'];
+  
+		  for ($i = 1; $i <= $maxCols; $i++) {
+			  $colName = $data["col{$i}name"] ?? null;
+			  $colLabel = $data["col{$i}label"] ?? strtoupper($colName);
+  
+			  if ($colName) {
+				  $columnLabels[$colName] = $colLabel;
+			  }
+		  }
+	  }
+  
+	  return $columnLabels;
+  }
+  
+  /**
+   * Applies sorting to the TableRows object for modal display.
+   *
+   * @param TableRows $tableRows - The table rows.
+   * @param string $sortColumn - The column to sort by.
+   * @param string $sortDir - The sort direction ('asc' or 'desc').
+   */
+  protected function applyModalSorting(&$tableRows, string $sortColumn, string $sortDir): void {
+	  if ($sortColumn) {
+		  $tableRows = iterator_to_array($tableRows);
+		  usort($tableRows, function ($a, $b) use ($sortColumn, $sortDir) {
+			  $aVal = $a[$sortColumn] ?? '';
+			  $bVal = $b[$sortColumn] ?? '';
+			  return $sortDir === 'asc' ? $aVal <=> $bVal : $bVal <=> $aVal;
+		  });
+	  }
+  }
+  
+  /**
+   * Generates the table headers for the modal using column labels.
+   *
+   * @param array $columnLabels - Column labels.
+   * @param TableRows $tableRows - The table rows data.
+   * @return string - The generated headers HTML.
+   */
+  protected function generateModalTableHeaders(array $columnLabels, $tableRows): string {
+	  $headersHtml = '';
+  
+	  if (count($tableRows) > 0) {
+		  $firstRow = $tableRows[0]->getArray();
+		  $headers = array_slice(array_keys($firstRow), 1);
+  
+		  foreach ($headers as $header) {
+			  $label = $columnLabels[$header] ?? strtoupper($header);
+			  $headersHtml .= "<th>{$label}</th>";
+		  }
+	  }
+  
+	  return $headersHtml;
+  }
+  
+  /**
+   * Generates the table content for the modal.
+   *
+   * @param TableRows $tableRows - The table rows.
+   * @param string $resolvePageColumn - Column name to resolve as page link.
+   * @param string $resolveField - Field to display for resolved page.
+   * @return string - The generated content HTML.
+   */
+  protected function generateModalTableContent($tableRows, string $resolvePageColumn, string $resolveField): string {
+	  $content = '';
+  
+	  foreach ($tableRows as $row) {
+		  $rowArray = $row->getArray();
+		  $content .= "<tr>";
+  
+		  $dataColumns = array_slice($rowArray, 1);
+		  foreach ($dataColumns as $key => $value) {
+			  if ($key === $resolvePageColumn && $resolveField) {
+				  $page = $this->wire('pages')->get((int) $value);
+				  $value = $page->id ? "<a href='{$page->url}' target='_blank'>{$page->get($resolveField)}</a>" : 'Unknown';
+			  }
+			  $content .= "<td>{$value}</td>";
+		  }
+  
+		  $content .= "</tr>";
+	  }
+  
+	  return $content;
+  }
+
+
 	/**
 	 * Render a raw table field without Page lookup.
 	 *
@@ -284,42 +417,6 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	}
 	
 	/**
-	 * Determine how to render a cell based on the field type and configuration parameters.
-	 *
-	 * This method acts as a dispatcher that directs the rendering to the appropriate method
-	 * based on the provided parameters. It handles virtual fields, table fields, Page/PageArray fields,
-	 * and primitive fields.
-	 *
-	 * @param Page $user The current user object
-	 * @param string $fieldName The name of the field
-	 * @param array $params Configuration parameters for the field
-	 * @return string The rendered content for the table cell
-	 */
-	protected function renderCell(Page $user, string $fieldName, array $params): string {
-		$value = $user->get($fieldName);
-	
-		// 0) Virtual fields (virtual__...) are processed first
-		if (str_starts_with($fieldName, 'virtual__') && !empty($params['selector'])) {
-			return $this->renderSelectorExpression($user, $params['selector'], $params);
-		}
-	
-		// 1) TableField
-		if (!empty($params['table_column'])) {
-			return empty($params['resolve_page'])
-				? $this->renderTableRawField($user, $fieldName, $params)
-				: $this->renderTableField($user, $fieldName, $params);
-		}
-	
-		// 2) Page or PageArray fields
-		if ($value instanceof Page || $value instanceof PageArray) {
-			return $this->renderPageField($user, $fieldName, $params);
-		}
-	
-		// 3) Primitive fields
-		return $this->renderPrimitiveField($user, $fieldName, $params);
-	}
-	
-	/**
 	 * Render a FieldtypeTable field with optional Page reference resolution.
 	 *
 	 * This method processes a FieldtypeTable field by extracting the specified column values,
@@ -348,7 +445,13 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	
 		// Ensure the field is a WireArray instance
 		if (!($rows instanceof WireArray)) return '';
-	
+		
+		// Check for modal configuration
+		$modalContent = $this->renderModal($rows, $params, $fieldName);
+		if ($modalContent) {
+			return $modalContent;
+		}
+		
 		foreach ($rows as $row) {
 			$pageID = (int) ($row[$column] ?? 0);
 			if (!$pageID) continue;
@@ -606,6 +709,101 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 		return $output;
 	}
 
+	
+	/**
+	 * Determine how to render a cell based on the field type and configuration parameters.
+	 *
+	 * This method acts as a dispatcher that directs the rendering to the appropriate method
+	 * based on the provided parameters. It handles virtual fields, table fields, Page/PageArray fields,
+	 * and primitive fields.
+	 *
+	 * @param Page $user The current user object
+	 * @param string $fieldName The name of the field
+	 * @param array $params Configuration parameters for the field
+	 * @return string The rendered content for the table cell
+	 */
+	protected function renderCell(Page $user, string $fieldName, array $params): string {
+		$value = $user->get($fieldName);
+	
+		// 0) Virtual fields (virtual__...) are processed first
+		if (str_starts_with($fieldName, 'virtual__') && !empty($params['selector'])) {
+			return $this->renderSelectorExpression($user, $params['selector'], $params);
+		}
+	
+		// 1) TableField
+		if (!empty($params['table_column'])) {
+			return empty($params['resolve_page'])
+				? $this->renderTableRawField($user, $fieldName, $params)
+				: $this->renderTableField($user, $fieldName, $params);
+		}
+	
+		// 2) Page or PageArray fields
+		if ($value instanceof Page || $value instanceof PageArray) {
+			return $this->renderPageField($user, $fieldName, $params);
+		}
+	
+		// 3) Primitive fields
+		return $this->renderPrimitiveField($user, $fieldName, $params);
+	}
+	
+	
+	/**
+		 * Render a table column (header or data cell) with optional text alignment and other configuration.
+		 *
+		 * This method handles both the rendering of header cells (<th>) and data cells (<td>) for the table.
+		 * It applies any specified text alignment (left, center, right) using UIKit classes and supports
+		 * dynamic content generation for both headers (including sorting links) and data cells.
+		 *
+		 * @param Page|NullPage|null $user The user object for the current row (null when rendering a header).
+		 * @param array $col The column configuration array, including parameters like 'user_field' and 'parameters'.
+		 * @param bool $isHeader Whether the column being rendered is a header (<th>) or a data cell (<td>).
+		 * @return string The rendered HTML string for the column (<th> or <td>).
+		 */
+		 protected function renderColumn($user, $col, $isHeader = false): string {
+			$field = $col['user_field'] ?? '';
+			$params = $this->parseParams($col['parameters'] ?? '');
+		
+			// Determine text alignment class
+			$textAlign = $params['textAlign'] ?? 'left'; // Default to 'left'
+			$alignClass = match (strtolower($textAlign)) {
+				'center' => 'uk-text-center',
+				'right' => 'uk-text-right',
+				default => 'uk-text-left',
+			};
+		
+			if ($isHeader) {
+				// Render header cell (<th>)
+				$label = $params['label'] ?? null;
+				if (!$label) {
+					$fieldData = wire('fields')->get($field);
+					$label = $fieldData instanceof Field ? $fieldData->label : $field;
+				}
+		
+				$sortField = $this->input->get('sort');
+				$sortDir = strtolower($this->input->get('dir') ?? 'asc');
+				$newDir = ($sortField === $field && $sortDir === 'asc') ? 'desc' : 'asc';
+		
+				$query = http_build_query([
+					'sort' => $field,
+					'dir' => $newDir,
+					'start' => 0,
+				]);
+				$url = $this->page->url . '?' . $query;
+		
+				$sortIcon = '';
+				if ($sortField === $field) {
+					$icon = $sortDir === 'asc' ? 'chevron-up' : 'chevron-down';
+					$sortIcon = "&nbsp;<span uk-icon=\"icon: {$icon}; ratio: 1\" style=\"vertical-align: 2px;\"></span>";
+				}
+		
+				return "<th class='{$alignClass}'><a href='{$url}'>{$this->sanitizer->entities($label)}{$sortIcon}</a></th>";
+			} else {
+				// Render data cell (<td>)
+				$cell = $this->renderCell($user, $field, $params);
+				return "<td class='{$alignClass}'>{$cell}</td>";
+			}
+		}
+		
 	/**
 	  * Render the complete user data table.
 	  *
@@ -763,41 +961,6 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 		}
 	
 		return $out . $editlink;
-	}
-	
-		 
-	/**
-	 * Parse configuration parameters from a multiline text string.
-	 *
-	 * Processes key-value pairs from a string where each line contains one parameter.
-	 * Ignores lines marked as optional (e.g., "key=value (optional)").
-	 *
-	 * Example input:
-	 *  key1=value1
-	 *  key2=value2 (optional)
-	 *
-	 * @param string $text The raw parameter string with one key=value pair per line
-	 * @return array An associative array of parsed parameters
-	 */
-	
-	protected function parseParams(string $text): array {
-		$lines = explode("\n", $text); // Split the input into lines
-		$params = [];
-		
-		foreach ($lines as $line) {
-			// Match key-value pairs with a simple syntax
-			if (preg_match('/^([a-zA-Z0-9_]+)=(.+)$/', $line, $matches)) {
-				$key = trim($matches[1]);
-				$val = trim($matches[2]);
-	
-				// Skip parameters with "(optional)" in their value
-				if (str_ends_with($val, '(optional)')) {
-					continue;
-				}
-				$params[$key] = $val; // Add the key-value pair
-			}
-		}
-		return $params; // Return all parsed parameters
 	}
 	
 
