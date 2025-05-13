@@ -3,6 +3,16 @@
 All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
+
+## [2.3.8] – 2025-05-13
+
+### Changed
+
+- Adjusted the method renderTableField() to correctly handle core properties (e.g., name, id) in addition to custom fields.
+- Modified the conditional check for $pageField to verify both fields and core properties:
+
+---
+
 ## [2.3.7] – 2025-05-13
 
 ### Changed
@@ -14,6 +24,7 @@ All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - [Commit Link](https://github.com/frameless-at/ProcessUserDataTable/commit/76a431892a38a630cea93fcbc56796addff8252d)
 
 ---
+
 ## [2.3.6] – 2025-05-12
 
 ### Changed

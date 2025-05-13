@@ -10,7 +10,7 @@
  * @author frameless Media
  * @link   https://frameless.at
  * @license GNU/GPL v2
- * @version 2.3.7
+ * @version 2.3.8
  */
 
 class ProcessUserDataTable extends Process implements Module, ConfigurableModule {
@@ -23,7 +23,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	public static function getModuleInfo(): array {
 		return [
 			'title' => 'User Data Table',
-			'version' => '2.3.7',
+			'version' => '2.3.8',
 			'summary' => 'Displays a configurable table of user fields in the admin interface.',
 			'author' => 'frameless Media',
 			'icon' => 'users',
@@ -355,9 +355,9 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	
 			$page = wire('pages')->get($pageID);
 			if (!$page instanceof Page || !$page->id) continue;
-			if ($pageField && !$page->hasField($pageField)) continue;
-	
-			$text = $pageField ? $page->getFormatted($pageField) : $page->title;
+			if ($pageField && !$page->hasField($pageField) && !$page->$pageField) continue;	
+					
+			$text = ($page->$pageField != '') ? $page->$pageField : $page->title;
 			$text = $this->sanitizer->entities((string) $text);
 	
 			// Generate tooltip if configured
@@ -859,7 +859,7 @@ public static function getModuleConfigInputfields(array $data): InputfieldWrappe
 			'label'       => 'Default sorting field',
 			'description' => 'e.g., "email" or "virtual__sum".',
 			'value'       => $data['sort_field'] ?? '',
-			'columnWidth' => 33,
+			'columnWidth' => 40,
 		],
 		'sort_dir' => [
 			'type'        => 'InputfieldSelect',
@@ -867,14 +867,14 @@ public static function getModuleConfigInputfields(array $data): InputfieldWrappe
 			'description' => '"Ascending": A->Z, or 1->100.',
 			'options'     => ['asc' => 'Ascending', 'desc' => 'Descending'],
 			'value'       => $data['sort_dir'] ?? 'asc',
-			'columnWidth' => 33,
+			'columnWidth' => 40,
 		],
 		'entries_per_page' => [
 			'type'        => 'InputfieldInteger',
 			'label'       => 'Entries per page',
 			'description' => 'Default: 25',
 			'value'       => $data['entries_per_page'] ?? 25,
-			'columnWidth' => 33,
+			'columnWidth' => 20,
 		],
 	];
 
