@@ -7,7 +7,7 @@ The **ProcessUserDataTable** module provides a highly configurable table of user
 
 ---
 
-## 📖 Table of Contents
+## Table of Contents
 
 1. [Overview](#overview)
 2. [Installation](#installation)
@@ -20,7 +20,7 @@ The **ProcessUserDataTable** module provides a highly configurable table of user
 
 ---
 
-## 🧐 Overview
+## Overview
 
 The **ProcessUserDataTable** module provides advanced data table functionality for user data, including:
 
@@ -33,7 +33,7 @@ The **ProcessUserDataTable** module provides advanced data table functionality f
 
 ---
 
-## 🛠️ Installation
+## Installation
 
 1. **Download the Module**:
 
@@ -51,7 +51,7 @@ The **ProcessUserDataTable** module provides advanced data table functionality f
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 Configuration is divided into:
 
@@ -60,7 +60,7 @@ Configuration is divided into:
 
 ---
 
-## 📝 Field Configuration Syntax
+## Field Configuration Syntax
 
 Field configurations follow a strict key-value format, using the syntax:
 
@@ -71,7 +71,7 @@ key=option1|option2
 
 ---
 
-## 🛠️ Configuration Parameters
+## Configuration Parameters
 
 The following configuration parameters are available:
 
@@ -166,7 +166,7 @@ resolve_page: title
 
 ---
 
-## 🛠️ Formatting Options
+## Formatting Options
 
 Formatting parameters can be applied to field values and tooltips. The available formats are as follows:
 
@@ -181,7 +181,7 @@ Formatting parameters can be applied to field values and tooltips. The available
 
 ---
 
-## 🛠️ Selector Options
+## Selector Options
 
 The `selector` parameter is used primarily in virtual fields to perform calculations or data manipulations. The following selector options are available:
 
@@ -195,7 +195,7 @@ The `selector` parameter is used primarily in virtual fields to perform calculat
 | `join(..., SEPARATOR)` | Joins values with a separator   | `join(tags.name, ', ')`      |
 | `FIELDNAME`            | Accesses a specific field value | `status`, `email`            |
 
-### ✅ Selector Parameter Syntax
+### Selector Parameter Syntax
 
 The `selector` parameter defines the data extraction logic for virtual fields and supports various functions. The syntax follows one of two structures:
 
@@ -231,21 +231,21 @@ selector=TABLEFIELD.IDFIELD.VALUEFIELD
 
 ---
 
-### 🔥 **Why the 3-Segment Structure?**
+### **Why the 3-Segment Structure?**
 
 - The 3-segment structure is necessary to maintain the link between a **table row and its referenced Page object**.
 - It allows for accessing Page properties (`price`, `title`) based on a reference field (`product_id`).
 
 ---
 
-### 🚀 **Summary:**
+### **Summary:**
 - **2-segment structure** is for direct Page or PageArray fields.
 - **3-segment structure** is for complex data relationships in FieldtypeTable fields, maintaining links between rows and referenced Pages.
 
 ---
 
 
-## 📝 Examples
+## Examples
 
 **1. Displaying a TableField of purchases, linked to the product page, with Tooltips that show the date of the purchase:**
 
@@ -276,24 +276,28 @@ format=map(0:Inactive,1:Active)
 
 ---
 
-## ❓ FAQ
+## FAQ
 
 * **How do I format tooltip values?**
 
-  * Tooltip values now use the same `format` syntax as field values, processed through the `formatValue()` method.
+  - Tooltip values now use the same `format` syntax as field values, processed through the `formatValue()` method.
+---
 
 * **Can I use multiple mappings?**
 
-  * Yes. Use the `map()` syntax for clear key-value mappings.
+  - Yes. Use the `map()` syntax for clear key-value mappings.
+---  
 
 * **How do I resolve Page references?**
 
-  * Use the `resolve_page` parameter to specify a subfield of the referenced Page.
+  - Use the `resolve_page` parameter to specify a subfield of the referenced Page.
+---  
 
 * **What happens if a format is not recognized?**
 
-  * The value will be returned as-is, without formatting.
+  - The value will be returned as-is, without formatting.
+---  
 
 * **Can I customize currency symbols?**
 
-  * Yes, the `currency()` format allows full locale support, e.g., `currency(EUR:de_AT)`.
+  - Yes, the `currency()` format allows full locale support, e.g., `currency(EUR:de_AT)`.
