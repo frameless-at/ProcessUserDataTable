@@ -4,6 +4,25 @@ All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.4.0] - 2025-05-13
+
+### Added
+
+- **Added modal display functionality for `FieldtypeTable` fields with configurable sorting, column resolution, and labels.**
+  - New parameters for table fields:
+    - `modal`: Enable/disable the modal view.
+    - `modal_sort`: Column to sort by.
+    - `modal_sortdir`: Sort direction (`asc` or `desc`).
+
+- Enhanced content rendering with clickable page links and column labels.
+- Improved handling of dynamic table structures based on the `maxCols` setting.
+- Added error handling for missing or invalid page references.
+
+### Links
+- [Commit Link](https://github.com/frameless-at/ProcessUserDataTable/commit/c4f54c0261c64d3a15e0bd0dc3936a0ebb581cc2)
+
+---
+
 ## [2.3.8] – 2025-05-13
 
 ### Changed
