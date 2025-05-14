@@ -4,6 +4,17 @@ All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.4.1] – 2025-05-14
+
+### Added
+
+- Introduced `modal_skip` parameter for `FieldtypeTable` fields to exclude specific columns from modal display.
+  - Accepts a comma-separated list of column names, e.g., `modal_skip=product_session_id, other_field`.
+  - Applied consistently in both the modal headers and content rendering.
+  - Ensures the specified columns are entirely skipped in the output, maintaining logical structure and consistent data presentation.
+  
+---
+  
 ## [2.4.0] - 2025-05-13
 
 ### Added
