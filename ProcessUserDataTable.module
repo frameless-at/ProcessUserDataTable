@@ -10,7 +10,7 @@
  * @author frameless Media
  * @link   https://frameless.at
  * @license GNU/GPL v2
- * @version 2.4.0
+ * @version 2.4.1
  */
 
 class ProcessUserDataTable extends Process implements Module, ConfigurableModule {
@@ -23,7 +23,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	public static function getModuleInfo(): array {
 		return [
 			'title' => 'User Data Table',
-			'version' => '2.4.0',
+			'version' => '2.4.1',
 			'summary' => 'Displays a configurable table of user fields in the admin interface.',
 			'author' => 'frameless Media',
 			'icon' => 'users',
@@ -231,10 +231,10 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
    * @param string $fieldName - The field name.
    * @return string - The rendered modal link and content or an empty string.
    */
-  protected function renderModal($tableRows, array $params, string $fieldName): string {
+  protected function renderModal($tableRows, array $params, string $fieldName, $user): string {
 	  $modalEnabled = isset($params['modal']) && $params['modal'] == '1';
 	  if (!$modalEnabled || !$tableRows) return '';
-  
+  	  $modalSkip = array_map('trim', explode(',', $params['modal_skip'] ?? ''));
 	  $modalSort = $params['modal_sort'] ?? '';
 	  $modalSortDir = strtolower($params['modal_sortdir'] ?? 'asc');
 	  $resolvePageColumn = $params['table_column'] ?? '';
@@ -255,7 +255,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	  $this->applyModalSorting($tableRows, $modalSort, $validSortDir);
   
 	  // Generate Modal Content
-	  $tableContent = $this->generateModalTableContent($tableRows, $resolvePageColumn, $resolveField);
+	  $tableContent = $this->generateModalTableContent($tableRows, $resolvePageColumn, $resolveField, $modalSkip);
   
 	  // Modal Link
 	  $link = "<a href='#{$modalId}' uk-toggle>{$entryCount}</a>";
@@ -264,10 +264,10 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	  $modalContent = "<div id='{$modalId}' class='uk-modal' uk-modal>
 						  <div class='uk-modal-dialog uk-modal-body uk-width-1-1@s uk-width-3-4@m uk-width-1-2@xl uk-width-3-4'>
 							  <button class='uk-modal-close-default' type='button' uk-close></button>
-							  <h2 class='uk-modal-title'>{$modalLabel}</h2>
+							  <h2 class='uk-modal-title'>{$modalLabel} <small> – {$user->email}</small></h2>
 							  <table class='uk-table uk-table-divider'>
 								  <thead>
-									  <tr>{$this->generateModalTableHeaders($columnLabels, $tableRows)}</tr>
+									  <tr>{$this->generateModalTableHeaders($columnLabels, $tableRows, $modalSkip)}</tr>
 								  </thead>
 								  <tbody>{$tableContent}</tbody>
 							  </table>
@@ -329,7 +329,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
    * @param TableRows $tableRows - The table rows data.
    * @return string - The generated headers HTML.
    */
-  protected function generateModalTableHeaders(array $columnLabels, $tableRows): string {
+  protected function generateModalTableHeaders(array $columnLabels, $tableRows, $skipColumns): string {
 	  $headersHtml = '';
   
 	  if (count($tableRows) > 0) {
@@ -337,6 +337,10 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 		  $headers = array_slice(array_keys($firstRow), 1);
   
 		  foreach ($headers as $header) {
+			  // Skip columns based on configuration
+			  if (is_array($skipColumns) && in_array($header, $skipColumns)) {
+				  continue;
+			  }
 			  $label = $columnLabels[$header] ?? strtoupper($header);
 			  $headersHtml .= "<th>{$label}</th>";
 		  }
@@ -354,7 +358,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	* @param string $resolveField - Field to display for resolved page.
 	* @return string - The generated content HTML.
 	*/
-  protected function generateModalTableContent($tableRows, string $resolvePageColumn, string $resolveField): string {
+  protected function generateModalTableContent($tableRows, string $resolvePageColumn, string $resolveField, $skipColumns): string {
 	   $content = '';
    
 	   foreach ($tableRows as $row) {
@@ -364,7 +368,10 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 		   $dataColumns = array_slice($rowArray, 1);
    
 		   foreach ($dataColumns as $key => $value) {
-   
+				// Skip columns based on configuration
+		   		if (is_array($skipColumns) && in_array($key, $skipColumns)) {
+			   		continue;
+		   		}
 			   // Check if value is a numeric timestamp
 			   if (is_numeric($value) && (int)$value > 1000000000) {
 				   $value = date('d.m.Y H:i', (int)$value);
@@ -460,7 +467,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 		if (!($rows instanceof WireArray)) return '';
 		
 		// Check for modal configuration
-		$modalContent = $this->renderModal($rows, $params, $fieldName);
+		$modalContent = $this->renderModal($rows, $params, $fieldName, $user);
 		if ($modalContent) {
 			return $modalContent;
 		}

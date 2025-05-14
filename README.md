@@ -87,6 +87,7 @@ The following configuration parameters are available:
 | `edit_link`      | Primitive             | No            | Bool (1, 0)                    |
 | `table_column`   | TableField            | Yes           | Column name                    |
 | `modal`          | TableField            | No            | Bool (1, 0)                    |
+| `modal_skip`     | TableField            | No            | Column names, comma separated  |
 | `modal_sort`     | TableField            | No            | Column name                    |
 | `modal_sortdir`  | TableField            | No            | asc, desc                      |
 | `resolve_page`   | TableField, PageField | No            | Fieldname                      |
@@ -99,36 +100,51 @@ The following configuration parameters are available:
 
 The module now supports modal displays for `FieldtypeTable` fields. This feature allows you to display data from a table field in a modal window with sorting, resolved page links, and custom labels.
 
-### Example Output
+### Example 
 
-Assuming the following data in the `visits` table field:
+Assuming the following data in the `products` table field:
 
-| ID  | visit_id  | visit_count |
-|-----|-----------|-------------|
-| 1   | 101       | 5           |
-| 2   | 102       | 3           |
-| 3   | 103       | 8           |
+| ID  | product_id | product_session_id  | product_date |
+|-----|------------|---------------------|--------------|
+| 1   | 101        | abc123s987ah5532fwf | 1694646000   |
+| 2   | 102        | def45as2v3fwrrddsd6 | 1694647200   |
+| 3   | 103        | ghi7dss2xcf4gc4rnkm | 1694648400   |
 
-The modal output will look like this:
+The modal output with the configuration below will look like this:
 
-| Pages            | Visits |
-|------------------|--------|
-| [Home](https://example.com/home) | 8      |
-| [Contact](https://example.com/contact) | 5      |
-| [About](https://example.com/about) | 3      |
+| PRODUCT                         | PURCHASEDATE       |
+|---------------------------------|--------------------|
+| [Product A](https://example.com/product-101) | 13.05.2025 12:00 |
+| [Product B](https://example.com/product-102) | 13.05.2025 12:20 |
+| [Product C](https://example.com/product-103) | 13.05.2025 12:40 |
 
-- The `visit_id` column is resolved to the `title` field of the target page.
-- The `visit_count` column is sorted in descending order.
+```
+label: User Products
+modal: 1
+modal_sort: product_date
+modal_sortdir: desc
+table_column: product_id
+resolve_page: title
+modal_skip: product_session_id
+```
+
+- The `product_session_id` column is **skipped** as configured by the `modal_skip` parameter.
+- The `product_id` column is **resolved as a page link**, using the `title` field.
+- The `product_date` column is **formatted as a timestamp** in `d.m.Y H:i` format.
 
 ---
 
 ### Implementation Details
 
-- **Modal ID Generation:**  
-  Each modal is assigned a unique ID to avoid conflicts when multiple modals are rendered simultaneously.
+- **Modal Link and Modal ID:**  
+  The modal is generated with a unique ID to prevent conflicts. The link displays the entry count and opens the modal.
 
 - **Column Labels Handling:**  
   The column labels are fetched directly from the `FieldtypeTable` configuration using the `maxCols` setting. The structure is dynamically adapted to handle any number of columns.
+
+- **Column Skipping Logic:**  
+  The `modal_skip` parameter is processed as a comma-separated list of column names.  
+  Columns listed in `modal_skip` will **not be rendered** in both the table headers and content.
 
 - **Sorting Logic:**  
   Sorting is applied using the `modal_sort` and `modal_sortdir` parameters. The sorting is applied before generating the table content, ensuring that the data is rendered in the correct order.
@@ -136,33 +152,8 @@ The modal output will look like this:
 - **Resolved Page Links:**  
   When `resolve_page` is configured, the specified column will be treated as a page reference, and its value will be rendered as a clickable link using the `resolve_page` field.
 
-- **Dynamic Table Content:**  
-  The modal content is generated dynamically based on the table field data. Each row is iterated, and its content is rendered as defined by the column configuration.
-
 - **Error Handling:**  
   If the `resolve_page` column points to a non-existent page, the output will display `"Unknown"` instead of generating a broken link.
-
----
-
-### Example Usage Scenario
-
-**User Activity Tracking:**  
-If a `FieldtypeTable` field is used to log user activity with columns like `page_id`, `visit_count`, and `visit_date`, the modal can be configured to:
-
-- Display the `page_id` as a clickable link to the page title.
-- Sort the rows by `visit_count` in descending order to show the most visited pages at the top.
-- Label the columns as `"Page Title"`, `"Visits"`, and `"Last Visit"` for clarity.
-
-Example configuration:
-
-```
-label: User Activity
-modal: 1
-modal_sort: visit_count
-modal_sortdir: desc
-table_column: page_id
-resolve_page: title
-```
 
 ---
 
@@ -280,24 +271,24 @@ format=map(0:Inactive,1:Active)
 
 * **How do I format tooltip values?**
 
-  - Tooltip values now use the same `format` syntax as field values, processed through the `formatValue()` method.
+  * Tooltip values now use the same `format` syntax as field values, processed through the `formatValue()` method.
 ---
 
 * **Can I use multiple mappings?**
 
-  - Yes. Use the `map()` syntax for clear key-value mappings.
----  
+  * Yes. Use the `map()` syntax for clear key-value mappings.
+---
 
 * **How do I resolve Page references?**
 
-  - Use the `resolve_page` parameter to specify a subfield of the referenced Page.
----  
+  * Use the `resolve_page` parameter to specify a subfield of the referenced Page.
+---
 
 * **What happens if a format is not recognized?**
 
-  - The value will be returned as-is, without formatting.
----  
+  * The value will be returned as-is, without formatting.
+---
 
 * **Can I customize currency symbols?**
 
-  - Yes, the `currency()` format allows full locale support, e.g., `currency(EUR:de_AT)`.
+  * Yes, the `currency()` format allows full locale support, e.g., `currency(EUR:de_AT)`.
