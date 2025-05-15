@@ -7,6 +7,8 @@ The **ProcessUserDataTable** module provides a highly configurable table of user
 
 ---
 
+![Example of a configured UserAdminTable](img/1_usertable.png)
+
 ## Table of Contents
 
 1. [Overview](#overview)
@@ -47,7 +49,8 @@ The **ProcessUserDataTable** module provides advanced data table functionality f
 
 3. **Configuration**:
 
-   * Navigate to `Setup > User Data Table` to define global settings and configure individual fields.
+   * Step 1: Choose fields to display and define global settings. SAVE.
+   * Step 2: Configure each of the chosen fields via Parameters. SAVE.
 
 ---
 
