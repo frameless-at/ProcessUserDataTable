@@ -279,7 +279,7 @@ The user fields are pulled from the User template. Virtual fields have to start 
 
 ### Visual Example 2
 
-**UserAdminTable with standard user fields and one virtual field showing `created` value as coulumn**
+**UserAdminTable with standard user fields and one virtual field showing `created` value as column.**
 
 ![Example of minimal configuration](img/6_minimal_configuration.png)
 
