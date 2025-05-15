@@ -253,8 +253,7 @@ All column titles are clickable for sorting asc/desc, direction is indicated aft
 
 :hover over the email adress to show the users created value, click on it and you get to the users edit page
 
-![Example of a configured UserAdminTable - hover over the email adress to show the users created value](img/2_email-hover.png)
-
+<img width="300" src="/frameless-at/ProcessUserDataTable/raw/main/img/2_email-hover.png" alt="Example of a configured UserAdminTable - hover over the email adress to show the users created value">
 
 Click on the pages/view value of a user and the details show in a modal. The pages shown are linked.
 
