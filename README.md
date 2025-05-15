@@ -282,7 +282,7 @@ The user fields are pulled from the User template. Virtual fields have to start 
 **UserAdminTable with standard user fields and one virtual field showing `created` value as coulumn**
 The only configuration setting needed for this view is for the virtual field `virtual__created` (see below).
 
-![Example of minimal configuration](img/6_minimal configuration.png)
+![Example of minimal configuration](img/6_minimal_configuration.png)
 
 ```
 label=Created
