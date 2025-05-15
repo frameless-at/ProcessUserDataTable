@@ -245,7 +245,7 @@ selector=TABLEFIELD.IDFIELD.VALUEFIELD
 
 ### Visual Example
 
-**Displaying a Table with User that have the 'member' status (showing their created value on :hover), their visits of certain pages (with modal opening for details), their purchases (with modal opening for details) and the Total of their purchases.**
+**UserAdminTable with users that have the 'member' status (showing their created value on :hover), their visits of certain pages (with modal opening for details), their purchases (with modal opening for details) and the Total of their purchases.**
 All column titles are clickable for sorting asc/desc, direction is indicated after sorting
 
 ![Example of a configured UserAdminTable](img/1_usertable.png)
@@ -263,7 +263,7 @@ Click on the pages/view value of a user and the details show in a modal. The pag
 
 Click on the purchases value of a user and the details show in a modal. The pages shown are linked.
 
-![Example of a configured UserAdminTable – Click on the purchases value of a user and the details show in a modal.](4_modal_purchases.png)
+![Example of a configured UserAdminTable – Click on the purchases value of a user and the details show in a modal.](img/4_modal_purchases.png)
 
 
 **Configuration of this table – Step 1: Choose Fields and global settings**
