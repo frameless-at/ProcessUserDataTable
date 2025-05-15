@@ -243,7 +243,7 @@ selector=TABLEFIELD.IDFIELD.VALUEFIELD
 
 ## Examples
 
-### Visual Example
+### Visual Example 1
 
 **UserAdminTable with users that have the 'member' status (showing their created value on :hover), their visits of certain pages (with modal opening for details), their purchases (with modal opening for details) and the Total of their purchases.**
 All column titles are clickable for sorting asc/desc, direction is indicated after sorting
@@ -277,8 +277,22 @@ The user fields are pulled from the User template. Virtual fields have to start 
 ![Example of configuration step 2](img/5_config_step-2.1.png)
 ![Example of configuration step 2](img/5_config_step-2.2.png)
 
+### Visual Example 2
 
-### Configuration Examples
+**UserAdminTable with standard user fields and one virtual field showing `created` value as coulumn**
+The only configuration setting needed for this view is for the virtual field `virtual__created` (see below).
+
+![Example of minimal configuration](img/6_minimal configuration.png)
+
+```
+label=Created
+selector=created
+format=date(d.m.Y H:i)
+```
+
+---
+
+### Other Configuration Examples
 
 **1. Displaying a TableField of purchases, linked to the product page, with Tooltips that show the date of the purchase:**
 
