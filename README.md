@@ -8,6 +8,9 @@ The **ProcessUserDataTable** module provides a highly configurable table of user
 ---
 
 ![Example of a configured UserAdminTable](img/1_usertable.png)
+Example of a configured UserAdminTable, also see [Examples Section](#examples)
+
+---
 
 ## Table of Contents
 
@@ -240,6 +243,32 @@ selector=TABLEFIELD.IDFIELD.VALUEFIELD
 
 
 ## Examples
+
+### Visual Example
+
+**Displaying a Table with User that have the 'member' status (showing their created value on :hover), their visits of certain pages (with modal opening for details), their purchases (with modal opening for details) and the Total of their purchases.**
+All column titles are clickable for sorting asc/desc, direction is indicated after sorting
+![Example of a configured UserAdminTable](img/1_usertable.png)
+
+:hover over the email adress to show the users created value, click on it and you get to the users edit page
+![Example of a configured UserAdminTable - hover over the email adress to show the users created value](img/2_email-hover.png)
+
+Click on the pages/view value of a user and the details show in a modal. The pages shown are linked.
+![Example of a configured UserAdminTable – Click on the pages/view value of a user and the details show in a modal.](img/3_modal_pages-views.png)
+
+Click on the purchases value of a user and the details show in a modal. The pages shown are linked.
+![Example of a configured UserAdminTable – Click on the purchases value of a user and the details show in a modal.](4_modal_purchases.png)
+
+**Configuration of this table – Step 1: Choose Fields and global settings**
+The user fields are pulled from the User template. Virtual fields have to start with `virtual__` and are comma separated. Default sorting field: All user related fields or properties (like `created`).
+![Example of configuration step 1](img/5_config_step-1)
+
+**Configuration of this table – Step 2: After saving the above Settings Configuration fields with default values for each chosen or defined virtual field will be displayed below. Configuration options for each field (depending on fieldtype) will be shown beneath as notes**
+![Example of configuration step 2](img/5_config_step-2.1)
+![Example of configuration step 2](img/5_config_step-2.2)
+
+
+### Configuration Examples
 
 **1. Displaying a TableField of purchases, linked to the product page, with Tooltips that show the date of the purchase:**
 
