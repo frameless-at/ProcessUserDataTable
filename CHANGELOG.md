@@ -4,6 +4,21 @@ All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.4.2] – 2025-06-03
+
+### Changed
+- Updated module version to 2.4.2 in code and metadata.
+- Improved the configuration/settings button in the user data table admin UI for better clarity and consistency.
+- Adjusted table pagination markup, adding additional styles (margins) to the pagination links for improved layout.
+
+### Documentation & Examples
+- Updated `README.md` with additional visual examples and step-by-step configuration instructions.
+- Added a series of new example images demonstrating the module’s features, configuration steps, and UI states:
+  - User table, field hover, modal view, configuration steps, and minimal configuration examples.
+- Documented the new `modal_skip` parameter (previously added) in `CHANGELOG.md`.
+
+---
+
 ## [2.4.1] – 2025-05-14
 
 ### Added
