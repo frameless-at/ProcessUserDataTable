@@ -4,6 +4,17 @@ All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.4.3] – 2025-06-03
+
+#### Added
+- **Import/Export Configuration Functions**:  
+  - Introduced logic for importing/exporting user data table configurations using JSON files.
+  - Added code to automatically create an import directory (`UserDataTableImport/`) if it does not exist.
+  - The module scans for the latest JSON file in the import directory and, if found, decodes the configuration and applies it to the module settings, removing the file after a successful import.
+  - This allows easy migration or backup/restore of configuration settings between environments.
+
+---
+
 ## [2.4.2] – 2025-06-03
 
 ### Changed
@@ -15,7 +26,6 @@ All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Updated `README.md` with additional visual examples and step-by-step configuration instructions.
 - Added a series of new example images demonstrating the module’s features, configuration steps, and UI states:
   - User table, field hover, modal view, configuration steps, and minimal configuration examples.
-- Documented the new `modal_skip` parameter (previously added) in `CHANGELOG.md`.
 
 ---
 
