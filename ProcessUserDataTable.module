@@ -10,7 +10,7 @@
  * @author frameless Media
  * @link   https://frameless.at
  * @license GNU/GPL v2
- * @version 2.4.2
+ * @version 2.4.3
  */
 
 class ProcessUserDataTable extends Process implements Module, ConfigurableModule {
@@ -23,7 +23,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	public static function getModuleInfo(): array {
 		return [
 			'title' => 'User Data Table',
-			'version' => '2.4.2',
+			'version' => '2.4.3',
 			'summary' => 'Displays a configurable table of user fields in the admin interface.',
 			'author' => 'frameless Media',
 			'icon' => 'users',
@@ -40,12 +40,15 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	/** @var array Holds the table columns configuration */
 	protected $columns = [];
 
+	
+		
 	/**
 	 * Main execute method to render the table.
 	 *
 	 * @return string Rendered HTML table
 	 */
 	public function ___execute(): string {
+
 		$data = $this->modules->getModuleConfigData($this);
 		$fieldList = json_decode($data['user_fields'] ?? '[]', true);
 		if (!is_array($fieldList)) $fieldList = [];
@@ -984,7 +987,6 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 		return $out . $editlink;
 	}
 	
-
 /**
 	 * Generate the configuration input fields for the module.
 	 *
@@ -1002,117 +1004,223 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	 * @return InputfieldWrapper The wrapper containing all input fields for configuration.
 	 */
 
-public static function getModuleConfigInputfields(array $data): InputfieldWrapper {
-	$inputfields = new InputfieldWrapper();
-
-	// Define a schema for the configuration fields
-	$configFields = [
-		'user_fields_select' => [
-			'type'        => 'InputfieldAsmSelect',
-			'label'       => 'Fields from the User Template',
-			'description' => 'Select fields from the User template to be displayed in the table.',
-			'options'     => self::getUserTemplateFields(),
-			'value'       => $data['user_fields_select'] ?? [],
-			'columnWidth' => 50,
-		],
-		'extra_fields' => [
-			'type'        => 'InputfieldText',
-			'label'       => 'Additional (virtual) field names',
-			'description' => 'Comma-separated, e.g., virtual__sum, virtual__avgScore.',
-			'value'       => $data['extra_fields'] ?? '',
-			'columnWidth' => 50,
-		],
-		'user_roles' => [
-			'type'        => 'InputfieldAsmSelect',
-			'label'       => 'Show only users with the following roles',
-			'description' => 'If no role is selected, all users will be displayed.',
-			'options'     => self::getAvailableRoles(),
-			'value'       => $data['user_roles'] ?? [],
-			'columnWidth' => 50,
-		],
-		'roles_mode' => [
-			'type'        => 'InputfieldRadios',
-			'label'       => 'Role condition',
-			'description' => 'At least one (OR) or all exactly (AND)',
-			'options'     => ['or' => 'At least one (OR)', 'and' => 'All exactly (AND)'],
-			'value'       => $data['roles_mode'] ?? 'or',
-			'columnWidth' => 50,
-		],
-		'sort_field' => [
-			'type'        => 'InputfieldText',
-			'label'       => 'Default sorting field',
-			'description' => 'e.g., "email" or "virtual__sum".',
-			'value'       => $data['sort_field'] ?? '',
-			'columnWidth' => 40,
-		],
-		'sort_dir' => [
-			'type'        => 'InputfieldSelect',
-			'label'       => 'Sorting direction',
-			'description' => '"Ascending": A->Z, or 1->100.',
-			'options'     => ['asc' => 'Ascending', 'desc' => 'Descending'],
-			'value'       => $data['sort_dir'] ?? 'asc',
-			'columnWidth' => 40,
-		],
-		'entries_per_page' => [
-			'type'        => 'InputfieldInteger',
-			'label'       => 'Entries per page',
-			'description' => 'Default: 25',
-			'value'       => $data['entries_per_page'] ?? 25,
-			'columnWidth' => 20,
-		],
-	];
-
-	// Generate input fields dynamically based on the schema
-	foreach ($configFields as $name => $fieldConfig) {
-		$field = wire('modules')->get($fieldConfig['type']);
-		$field->name = $name;
-		$field->label = $fieldConfig['label'];
-		$field->description = $fieldConfig['description'];
-		$field->value = $fieldConfig['value'];
-		if (isset($fieldConfig['options'])) {
-			$field->addOptions($fieldConfig['options']);
+	public static function getModuleConfigInputfields(array $data): InputfieldWrapper {
+		$importPath = wire('config')->paths->assets . 'UserDataTableImport/';
+		if (!is_dir($importPath)) wire('files')->mkdir($importPath, true);
+		
+		$files = wire('files')->find($importPath, ['extensions' => ['json'], 'sort' => 'modified', 'reverse' => true]);
+		if (!empty($files)) {
+			$jsonFile = $files[0];
+			$json = file_get_contents($jsonFile);
+			$import = json_decode($json, true);
+			if (is_array($import)) {
+				foreach ($import as $k => $v) {
+					$data[$k] = $v;
+				}
+				wire('modules')->saveConfig('ProcessUserDataTable',$data);
+					@unlink($jsonFile);
+			}
 		}
-		if (isset($fieldConfig['columnWidth'])) {
-			$field->columnWidth = $fieldConfig['columnWidth'];
+	
+		$inputfields = new InputfieldWrapper();
+	
+		// Define a schema for the configuration fields
+		$configFields = [
+			'user_fields_select' => [
+				'type'        => 'InputfieldAsmSelect',
+				'label'       => 'Fields from the User Template',
+				'description' => 'Select fields from the User template to be displayed in the table.',
+				'options'     => self::getUserTemplateFields(),
+				'value'       => $data['user_fields_select'] ?? [],
+				'columnWidth' => 50,
+			],
+			'extra_fields' => [
+				'type'        => 'InputfieldText',
+				'label'       => 'Additional (virtual) field names',
+				'description' => 'Comma-separated, e.g., virtual__sum, virtual__avgScore.',
+				'value'       => $data['extra_fields'] ?? '',
+				'columnWidth' => 50,
+			],
+			'user_roles' => [
+				'type'        => 'InputfieldAsmSelect',
+				'label'       => 'Show only users with the following roles',
+				'description' => 'If no role is selected, all users will be displayed.',
+				'options'     => self::getAvailableRoles(),
+				'value'       => $data['user_roles'] ?? [],
+				'columnWidth' => 50,
+			],
+			'roles_mode' => [
+				'type'        => 'InputfieldRadios',
+				'label'       => 'Role condition',
+				'description' => 'At least one (OR) or all exactly (AND)',
+				'options'     => ['or' => 'At least one (OR)', 'and' => 'All exactly (AND)'],
+				'value'       => $data['roles_mode'] ?? 'or',
+				'columnWidth' => 50,
+			],
+			'sort_field' => [
+				'type'        => 'InputfieldText',
+				'label'       => 'Default sorting field',
+				'description' => 'e.g., "email" or "virtual__sum".',
+				'value'       => $data['sort_field'] ?? '',
+				'columnWidth' => 40,
+			],
+			'sort_dir' => [
+				'type'        => 'InputfieldSelect',
+				'label'       => 'Sorting direction',
+				'description' => '"Ascending": A->Z, or 1->100.',
+				'options'     => ['asc' => 'Ascending', 'desc' => 'Descending'],
+				'value'       => $data['sort_dir'] ?? 'asc',
+				'columnWidth' => 40,
+			],
+			'entries_per_page' => [
+				'type'        => 'InputfieldInteger',
+				'label'       => 'Entries per page',
+				'description' => 'Default: 25',
+				'value'       => $data['entries_per_page'] ?? 25,
+				'columnWidth' => 20,
+			],
+		];
+	
+		// Generate input fields dynamically based on the schema
+		foreach ($configFields as $name => $fieldConfig) {
+			$field = wire('modules')->get($fieldConfig['type']);
+			$field->name = $name;
+			$field->label = $fieldConfig['label'];
+			$field->description = $fieldConfig['description'];
+			$field->value = $fieldConfig['value'];
+			if (isset($fieldConfig['options'])) {
+				$field->addOptions($fieldConfig['options']);
+			}
+			if (isset($fieldConfig['columnWidth'])) {
+				$field->columnWidth = $fieldConfig['columnWidth'];
+			}
+			$inputfields->add($field);
 		}
-		$inputfields->add($field);
+	
+		// Generate hidden field for combined list of user/extra fields
+		$allFields = array_merge(
+			$data['user_fields_select'] ?? [],
+			array_map('trim', explode(',', $data['extra_fields'] ?? ''))
+		);
+	
+		$hiddenField = wire('modules')->get('InputfieldHidden');
+		$hiddenField->name = 'user_fields';
+		$hiddenField->value = json_encode($allFields);
+		$inputfields->add($hiddenField);
+	
+		// Add parameter textareas for each field with default values based on field type
+		foreach ($allFields as $fieldName) {
+			$fieldName = trim($fieldName);
+			if (!$fieldName) continue;
+	
+			// Determine default value for the CONFIG textarea based on the field type
+			$defaultConfig = self::getDefaultConfigForField($fieldName);
+	
+			$paramField = wire('modules')->get('InputfieldTextarea');
+			$paramField->name = 'param__' . $fieldName;
+			$paramField->label = sprintf('Parameters for column "%s"', $fieldName);
+			$paramField->description = 'Optional: key=value per line';
+			$paramField->value = $data['param__' . $fieldName] ?? $defaultConfig; // Populate with default values if not set
+			$paramField->rows = 7;
+			$paramField->columnWidth = 33;
+	
+			// Add notes based on the field type
+			$paramField->notes = self::getFieldNotes($fieldName);
+	
+			$inputfields->add($paramField);
+		}
+		
+		// export field
+		$page = wire('pages')->get("template=admin, process=ProcessUserDataTable");
+		$exportUrl = $page->url . 'export/';		
+		$btn = wire('modules')->get('InputfieldMarkup');
+		$btn->label = 'Export Configuration';
+		$btn->columnWidth = 33;
+		$btn->value = "<a class='ui-button' href='{$exportUrl}'>Exportieren</a>";
+		$btn->collapsed = Inputfield::collapsedYes;
+		$inputfields->add($btn);
+		
+		//import field
+		$importPath = wire('config')->paths->assets . 'UserDataTableImport/';
+		if (!is_dir($importPath)) wire('files')->mkdir($importPath, true);
+		$upload = wire('modules')->get('InputfieldFile');
+		$upload->name = 'import_config_file';
+		$upload->label = 'Import Configuration';
+		$upload->extensions = 'json';
+		$upload->maxFiles = 1;
+		$upload->destinationPath = $importPath;
+		$upload->overwrite = true;
+		$upload->collapsed = Inputfield::collapsedYes;
+		$inputfields->add($upload);
+		
+		return $inputfields;
+		
+	}
+	
+	/**
+	 * Performs cleanup when the module is uninstalled.
+	 *
+	 * @return void
+	 */
+	public function ___uninstall() {
+		parent::___uninstall();
+		$importPath = wire('config')->paths->assets . 'UserDataTableImport/';
+	
+		if (is_dir($importPath)) {
+			$files = glob($importPath . '*');
+			foreach ($files as $file) {
+				if (is_file($file)) {
+					@unlink($file);
+				}
+			}
+			@rmdir($importPath);
+		}
+	}
+	
+	/**
+	 * Exports the current module configuration as a downloadable JSON file.
+	 *
+	 * This method is triggered via a custom URL (e.g. /module-name/export/)
+	 * and returns a JSON file containing selected configuration keys as well as all parameter definitions.
+	 *
+	 * Headers are set to initiate a file download in the browser.
+	 *
+	 * @return void
+	 */
+	public function ___executeExport() {
+		header('Content-Type: application/json');
+		header('Content-Disposition: attachment; filename="userdatatableconfig-' . date('Ymd-His') . '.json"');
+	
+		$config = $this->modules->getModuleConfigData($this);
+		$export = [];
+	
+		$keysToExport = [
+			'user_fields_select',
+			'extra_fields',
+			'user_roles',
+			'roles_mode',
+			'sort_field',
+			'sort_dir',
+			'entries_per_page',
+			'user_fields', 
+		];
+	
+		foreach ($keysToExport as $key) {
+			if (isset($config[$key])) {
+				$export[$key] = $config[$key];
+			}
+		}
+	
+		foreach ($config as $key => $value) {
+			if (str_starts_with($key, 'param__')) {
+				$export[$key] = $value;
+			}
+		}
+	
+		echo json_encode($export, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+		exit;
 	}
 
-	// Generate hidden field for combined list of user/extra fields
-	$allFields = array_merge(
-		$data['user_fields_select'] ?? [],
-		array_map('trim', explode(',', $data['extra_fields'] ?? ''))
-	);
-
-	$hiddenField = wire('modules')->get('InputfieldHidden');
-	$hiddenField->name = 'user_fields';
-	$hiddenField->value = json_encode($allFields);
-	$inputfields->add($hiddenField);
-
-	// Add parameter textareas for each field with default values based on field type
-	foreach ($allFields as $fieldName) {
-		$fieldName = trim($fieldName);
-		if (!$fieldName) continue;
-
-		// Determine default value for the CONFIG textarea based on the field type
-		$defaultConfig = self::getDefaultConfigForField($fieldName);
-
-		$paramField = wire('modules')->get('InputfieldTextarea');
-		$paramField->name = 'param__' . $fieldName;
-		$paramField->label = sprintf('Parameters for column "%s"', $fieldName);
-		$paramField->description = 'Optional: key=value per line';
-		$paramField->value = $data['param__' . $fieldName] ?? $defaultConfig; // Populate with default values if not set
-		$paramField->rows = 7;
-		$paramField->columnWidth = 33;
-
-		// Add notes based on the field type
-		$paramField->notes = self::getFieldNotes($fieldName);
-
-		$inputfields->add($paramField);
-	}
-
-	return $inputfields;
-}
 
 /**
  * Helper function to determine default configuration values for fields based on their type.
