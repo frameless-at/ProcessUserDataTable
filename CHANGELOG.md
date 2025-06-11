@@ -3,10 +3,20 @@
 All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
+## [2.4.4] – 2025-06-11  
 
+### Changed  
+- Extracted the pagination rendering logic into a dedicated method `renderPagination()`, which generates a UIKit-compatible pager with:
+  - First and last page numbers  
+  - Max. 6 visible page links (configurable via variable)  
+  - Previous/next buttons (`«` / `»`)  
+  - Ellipsis between distant ranges (e.g. `1 … 5 6 7 … 13`)  
+  
+---
+  
 ## [2.4.3] – 2025-06-03
 
-#### Added
+### Added
 - **Import/Export Configuration Functions**:  
   - Introduced logic for importing/exporting user data table configurations using JSON files.
   - Added code to automatically create an import directory (`UserDataTableImport/`) if it does not exist.

@@ -10,7 +10,7 @@
  * @author frameless Media
  * @link   https://frameless.at
  * @license GNU/GPL v2
- * @version 2.4.3
+ * @version 2.4.4
  */
 
 class ProcessUserDataTable extends Process implements Module, ConfigurableModule {
@@ -23,7 +23,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	public static function getModuleInfo(): array {
 		return [
 			'title' => 'User Data Table',
-			'version' => '2.4.3',
+			'version' => '2.4.4',
 			'summary' => 'Displays a configurable table of user fields in the admin interface.',
 			'author' => 'frameless Media',
 			'icon' => 'users',
@@ -966,27 +966,89 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 		}
 		$out .= "</tbody></table></div>";
 	
-		// Pagination links
-		if ($total > $limit) {
-			$pageCount = ceil($total / $limit);
-			$out .= "<ul style='margin-left:0; margin-bottom:2.5em' class='uk-pagination'>";
-			for ($i = 1; $i <= $pageCount; $i++) {
-				$class = $i == $pageNum ? 'uk-active' : '';
-				$startVal = ($i - 1) * $limit;
-				$query = http_build_query([
-					'sort' => $sortField,
-					'dir' => $sortDir,
-					'start' => $startVal,
-				]);
-				$url = $this->page->url . '?' . $query;
-				$out .= "<li class='{$class}'><a href='{$url}'>{$i}</a></li>";
-			}
-			$out .= "</ul>";
-		}
+		$out .= $this->renderPagination($total, $limit, $pageNum, $sortField, $sortDir);
 	
 		return $out . $editlink;
 	}
 	
+	/**
+	 * Render a UIKit-compatible pagination navigation with optional ellipses.
+	 *
+	 * Displays a maximum number of numbered page links, plus "Previous" and "Next" buttons,
+	 * the first and last page, and ellipsis indicators ("…") where page ranges are skipped.
+	 *
+	 * @param int $total      Total number of items
+	 * @param int $limit      Items per page
+	 * @param int $pageNum    Current page number (1-based)
+	 * @param string $sortField Field used for sorting (preserved in URL)
+	 * @param string $sortDir   Sort direction (asc or desc, preserved in URL)
+	 * @return string           Rendered HTML of the pagination component
+	 */
+	protected function renderPagination(int $total, int $limit, int $pageNum, string $sortField, string $sortDir): string {
+		$maxVisiblePages = 9; // Max number of numeric page links (excluding prev/next)
+	
+		if ($total <= $limit) return '';
+	
+		$pageCount = ceil($total / $limit);
+		$pageNum = min($pageNum, $pageCount); // Safety check
+	
+		$out = "<ul class='uk-pagination' style='margin-left:0; margin-bottom:2.5em'>";
+	
+		$baseUrl = $this->page->url;
+		$queryBase = ['sort' => $sortField, 'dir' => $sortDir];
+	
+		// Previous button
+		if ($pageNum > 1) {
+			$query = http_build_query($queryBase + ['start' => ($pageNum - 2) * $limit]);
+			$out .= "<li><a href='{$baseUrl}?{$query}' aria-label='Previous'><span uk-pagination-previous></span></a></li>";
+		}
+	
+		$pages = [];
+	
+		// Always include first page
+		$pages[] = 1;
+	
+		// Calculate range of middle pages
+		$start = max(2, $pageNum - floor(($maxVisiblePages - 2) / 2));
+		$end = min($pageCount - 1, $start + $maxVisiblePages - 3);
+	
+		// Adjust start if near the end
+		if ($end >= $pageCount - 1) {
+			$start = max(2, $pageCount - $maxVisiblePages + 2);
+		}
+	
+		// Add middle page numbers
+		for ($i = $start; $i <= $end; $i++) {
+			$pages[] = $i;
+		}
+	
+		// Always include last page if more than one page
+		if ($pageCount > 1) {
+			$pages[] = $pageCount;
+		}
+
+		// Render numbered links
+		$prev = null;
+		foreach ($pages as $i) {
+			if ($prev !== null && $i > $prev + 1) {
+				$out .= "<li class='uk-disabled'><span>…</span></li>";
+			}
+			$class = $i == $pageNum ? 'uk-active' : '';
+			$query = http_build_query($queryBase + ['start' => ($i - 1) * $limit]);
+			$out .= "<li class='{$class}'><a href='{$baseUrl}?{$query}'>{$i}</a></li>";
+			$prev = $i;
+		}
+	
+		// Next button
+		if ($pageNum < $pageCount) {
+			$query = http_build_query($queryBase + ['start' => $pageNum * $limit]);
+			$out .= "<li><a href='{$baseUrl}?{$query}' aria-label='Next'><span uk-pagination-next></span></a></li>";
+		}
+	
+		$out .= "</ul>";
+		return $out;
+	}
+		
 /**
 	 * Generate the configuration input fields for the module.
 	 *
