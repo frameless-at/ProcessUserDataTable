@@ -44,10 +44,12 @@ The **ProcessUserDataTable** module provides advanced data table functionality f
    * Clone the repository:
    `git clone https://github.com/frameless-at/ProcessUserDataTable.git`
    * Or download and extract the ZIP into your `/site/modules/` directory.
+     
 
 2. **Install via Admin**:
 
    * Navigate to `Modules > Site > Add New` and locate **ProcessUserDataTable**.
+     
 
 3. **Configuration**:
 
