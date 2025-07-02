@@ -3,6 +3,15 @@
 All changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
+
+## [2.4.5] – 2025-07-02  
+
+### fixed  
+- removed hardcoded settings link url
+- warning on null object 
+  
+---
+
 ## [2.4.4] – 2025-06-11  
 
 ### Changed  
