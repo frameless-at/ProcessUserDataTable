@@ -10,7 +10,7 @@
  * @author frameless Media
  * @link   https://frameless.at
  * @license GNU/GPL v2
- * @version 2.4.4
+ * @version 2.4.5
  */
 
 class ProcessUserDataTable extends Process implements Module, ConfigurableModule {
@@ -23,7 +23,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	public static function getModuleInfo(): array {
 		return [
 			'title' => 'User Data Table',
-			'version' => '2.4.4',
+			'version' => '2.4.5',
 			'summary' => 'Displays a configurable table of user fields in the admin interface.',
 			'author' => 'frameless Media',
 			'icon' => 'users',
@@ -592,7 +592,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	
 		// Handle other field types (e.g., checkboxes, toggles)
 		$field = wire('fields')->get($fieldName);
-		if ($field->type instanceof FieldtypeCheckbox || $field->type instanceof FieldtypeToggle) {
+		if ($field && ($field->type instanceof FieldtypeCheckbox || $field->type instanceof FieldtypeToggle)) {
 			$value = $value == "1" ? 1 : 0; // Normalize checkbox values to 1 or 0
 		}
 	
@@ -841,8 +841,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 		// Build a configuration button
 		$moduleName = $this->className();
 		$editUrl = $this->wire('config')->urls->admin . "module/edit?name={$moduleName}&collapse_info=1";
-		$editlink = "<a class='ui-button ui-widget ui ui-corner-all ui-state-default' href='{$editUrl}'>Configuration</a>";
-		$editlink = "<p><a href='/cms/module/edit?name=ProcessUserDataTable&collapse_info=1'><i class='fa fa-gear pw-nav-icon fa-fw'></i>Settings</a>";
+		$editlink = "<p><a href='{$editUrl}'><i class='fa fa-gear pw-nav-icon fa-fw'></i>Settings</a></p>";
 
 		// Show message if no fields are configured
 		if (empty($this->columns)) return '<p>No fields configured.</p>' . $editlink;
