@@ -23,7 +23,7 @@ class ProcessUserDataTable extends Process implements Module, ConfigurableModule
 	public static function getModuleInfo(): array {
 		return [
 			'title' => 'User Data Table',
-			'version' => '2.4.2',
+			'version' => '2.4.3',
 			'summary' => 'Displays a configurable table of user fields in the admin interface.',
 			'author' => 'frameless Media',
 			'icon' => 'users',
